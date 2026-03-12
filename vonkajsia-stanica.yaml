@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.1.0"
+    version: "3.2.0"
   on_boot:
     priority: 600
     then:
@@ -50,6 +50,9 @@ esphome:
             - delay: 100ms
       - component.update: battery_voltage
       - component.update: ltr390_sensor
+      # Boot guard: počkáme 10s kým sa kábel ustáli, až potom povolíme počítanie zrážok
+      - delay: 10000ms
+      - lambda: 'id(rain_boot_ready) = true;'
       - script.execute: wifi_connect_logic
   on_shutdown:
     then:
@@ -182,6 +185,10 @@ globals:
     type: float
     restore_value: true
     initial_value: "0.0"
+  - id: rain_boot_ready
+    type: bool
+    restore_value: false
+    initial_value: "false"  # blokuje počítanie zrážok počas prvých 10s po boote
   - id: last_sleep_duration_s
     type: float
     restore_value: true
@@ -305,7 +312,7 @@ sensor:
     unit_of_measurement: "km/h"
     update_interval: 3s
     use_pcnt: false
-    internal_filter: 20ms
+    internal_filter: 3ms       # znížené z 20ms — 20ms filtrovalo reálne pulzy pri rýchlejšom vetre a dlhom kábli
     filters:
       - multiply: 0.04
       - lambda: 'return (x < 0.3f) ? 0.0f : x;'
@@ -327,7 +334,7 @@ sensor:
     unit_of_measurement: "mm/h"
     update_interval: 60s
     use_pcnt: false
-    internal_filter: 200ms
+    internal_filter: 500ms     # zvýšené z 200ms — 3m kábel pri boote generuje kapacitívne falošné pulzy
     filters:
       - multiply: 16.764
     total:
@@ -339,7 +346,12 @@ sensor:
         - multiply: 0.2794
       on_value:
         then:
-          - lambda: 'id(daily_rain_accumulator) = x;'
+          - lambda: |-
+              if (!id(rain_boot_ready)) {
+                ESP_LOGW("rain", "Boot guard aktívny — ignorujem pulzy (%.2f mm)", x);
+                return;
+              }
+              id(daily_rain_accumulator) = x;
   - platform: adc
     pin: GPIO33
     id: wind_vane_voltage
@@ -362,7 +374,7 @@ sensor:
     lambda: |-
       if (!id(wind_vane_voltage).has_state()) return NAN;
       float v = id(wind_vane_voltage).state;
-      if (v < 0.05f || !id(wind_speed).has_state() || id(wind_speed).state < 0.5f) return NAN;
+      if (v < 0.05f) return NAN;  // odstránená závislosť na wind_speed — smer musí fungovať aj pri pokoji
       float r_vane = ${wind_pullup_res} * ((3.3f / v) - 1.0f);
       struct WindDir { float resistance; float angle; };
       static const WindDir dirs[] = {
@@ -751,7 +763,8 @@ switch:
           id(sensor_error_count) = 0;
           id(wifi_fail_count) = 0;
           id(i2c_restart_attempts) = 0;
-          ESP_LOGI("diag", "Diagnostické počítadlá resetované.");
+          id(daily_rain_accumulator) = 0.0f;
+          ESP_LOGI("diag", "Diagnostické počítadlá a akumulátor zrážok resetované.");
 number:
   - platform: template
     name: "Prah poklesu tlaku"
