@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.2.0"
+    version: "3.3.0"
   on_boot:
     priority: 600
     then:
@@ -189,6 +189,10 @@ globals:
     type: bool
     restore_value: false
     initial_value: "false"  # blokuje počítanie zrážok počas prvých 10s po boote
+  - id: ota_mode_active
+    type: bool
+    restore_value: true     # uloží sa do RTC pamäte — prežije deep sleep!
+    initial_value: "false"
   - id: last_sleep_duration_s
     type: float
     restore_value: true
@@ -746,6 +750,18 @@ switch:
       - output.turn_off: rain_sensor_power
       - output.turn_off: i2c_sensor_power
   - platform: template
+    name: "OTA Režim (predĺžené budenie)"
+    id: ota_mode_switch
+    icon: "mdi:update"
+    entity_category: config
+    lambda: 'return id(ota_mode_active);'
+    turn_on_action:
+      - lambda: |-
+          id(ota_mode_active) = true;
+          ESP_LOGI("ota", "OTA režim aktivovaný — pri ďalšom boote zostanem hore 3 min.");
+    turn_off_action:
+      - lambda: 'id(ota_mode_active) = false;'
+  - platform: template
     name: "Vynútiť Deep Sleep"
     icon: "mdi:sleep"
     entity_category: config
@@ -865,7 +881,18 @@ script:
                 condition: api.connected
                 then:
                   - script.execute: read_all_sensors
-                  - delay: 3s
+                  - if:
+                      condition:
+                        lambda: 'return id(ota_mode_active);'
+                      then:
+                        - logger.log:
+                            level: INFO
+                            tag: "ota"
+                            format: "OTA režim — zostanem hore 3 minúty pre aktualizáciu."
+                        - delay: 3min
+                        - lambda: 'id(ota_mode_active) = false;'
+                      else:
+                        - delay: 3s
                   - script.execute: check_and_enter_deep_sleep
                 else:
                   - logger.log:
