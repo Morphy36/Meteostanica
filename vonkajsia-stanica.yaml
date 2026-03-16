@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.3.0"
+    version: "3.4.0"
   on_boot:
     priority: 600
     then:
@@ -246,7 +246,16 @@ sensor:
               ESP_LOGW("bme280", "Odmietnutá vlhkosť: %.1f%%", x);
               return {};
             }
+            // BME280 bug: senzor sa zasekne na 100% — označ ako NAN
+            if (x >= 99.5f) {
+              ESP_LOGW("bme280", "Vlhkosť %.1f%% → pravdepodobne zaseknutý senzor, ignorujem.", x);
+              id(sensor_error_count) += 1;
+              return {};
+            }
             return x;
+        - exponential_moving_average:
+            alpha: 0.3
+            send_every: 1
   - platform: ltr390
     address: 0x53
     i2c_id: busa
