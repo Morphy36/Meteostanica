@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.5.0"
+    version: "3.5.1"
   on_boot:
     priority: 600
     then:
@@ -518,7 +518,7 @@ sensor:
       return 0.0f;
   - platform: internal_temperature
     name: "Teplota CPU"
-    id: internal_temperature   # id potrebné pre component.update v read_all_sensors
+    id: cpu_temperature        # 'internal_temperature' je rezervované meno ESPHome — použijeme cpu_temperature
     entity_category: diagnostic
     update_interval: never
   - platform: uptime
@@ -952,7 +952,7 @@ script:
       - component.update: battery_voltage
       - component.update: rain_sensor_voltage
       - component.update: wifi_signal_dbm
-      - component.update: internal_temperature
+      - component.update: cpu_temperature
       # wind vane: 3 čítania s oneskorením aby median + SMA filter mali dostatok vzoriek
       - component.update: wind_vane_voltage
       - delay: 50ms
