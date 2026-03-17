@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.4.0"
+    version: "3.5.0"
   on_boot:
     priority: 600
     then:
@@ -369,7 +369,7 @@ sensor:
     pin: GPIO33
     id: wind_vane_voltage
     internal: true
-    update_interval: 5s
+    update_interval: never     # manuálne volané 3× v read_all_sensors pre plnenie median filtra
     attenuation: 12db
     filters:
       - median:
@@ -384,6 +384,7 @@ sensor:
     id: wind_direction_angle
     unit_of_measurement: "°"
     icon: "mdi:compass-rose"
+    update_interval: never     # default 60s by nikdy nevyšiel — stanica je hore len ~20-30s
     lambda: |-
       if (!id(wind_vane_voltage).has_state()) return NAN;
       float v = id(wind_vane_voltage).state;
@@ -517,6 +518,7 @@ sensor:
       return 0.0f;
   - platform: internal_temperature
     name: "Teplota CPU"
+    id: internal_temperature   # id potrebné pre component.update v read_all_sensors
     entity_category: diagnostic
     update_interval: never
   - platform: uptime
@@ -950,7 +952,16 @@ script:
       - component.update: battery_voltage
       - component.update: rain_sensor_voltage
       - component.update: wifi_signal_dbm
+      - component.update: internal_temperature
+      # wind vane: 3 čítania s oneskorením aby median + SMA filter mali dostatok vzoriek
+      - component.update: wind_vane_voltage
+      - delay: 50ms
+      - component.update: wind_vane_voltage
+      - delay: 50ms
+      - component.update: wind_vane_voltage
       - delay: 200ms
+      # smer vetra vypočítame až po naplnení filtra
+      - component.update: wind_direction_angle
       - component.update: rain_sensor_percent
       - component.update: dew_point
       - component.update: absolute_humidity
