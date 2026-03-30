@@ -181,6 +181,10 @@ globals:
     type: int
     restore_value: true
     initial_value: "0"
+  - id: humidity_stuck_count
+    type: int
+    restore_value: true    # prežije deep sleep — sleduje dlhodobé zaseknutie
+    initial_value: "0"
   - id: daily_rain_accumulator
     type: float
     restore_value: true
@@ -246,12 +250,19 @@ sensor:
               ESP_LOGW("bme280", "Odmietnutá vlhkosť: %.1f%%", x);
               return {};
             }
-            // BME280 bug: senzor sa zasekne na 100% — označ ako NAN
+            // BME280 bug: senzor sa zasekne na 100% — odmietni len ak je zaseknutý 9+ meraní za sebou
+            // (= ~3 wake cykly) aby sme neblokovali legitímnu 100% vlhkosť (dážď, noc)
             if (x >= 99.5f) {
-              ESP_LOGW("bme280", "Vlhkosť %.1f%% → pravdepodobne zaseknutý senzor, ignorujem.", x);
-              id(sensor_error_count) += 1;
-              return {};
+              id(humidity_stuck_count) += 1;
+              if (id(humidity_stuck_count) >= 9) {
+                ESP_LOGW("bme280", "Vlhkosť %.1f%% × %d meraní → zaseknutý senzor, ignorujem.", x, id(humidity_stuck_count));
+                id(sensor_error_count) += 1;
+                return {};
+              }
+              ESP_LOGI("bme280", "Vlhkosť %.1f%% (count=%d) → prijatá.", x, id(humidity_stuck_count));
+              return x;
             }
+            id(humidity_stuck_count) = 0;
             return x;
         - exponential_moving_average:
             alpha: 0.3
