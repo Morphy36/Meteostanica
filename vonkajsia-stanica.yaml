@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.7.0"
+    version: "3.7.1"
   on_boot:
     priority: 600
     then:
@@ -461,7 +461,7 @@ sensor:
       float T = id(sht41_temperature).state;
       float RH = id(sht41_humidity).state;
       float es = 6.112f * exp((17.67f * T) / (T + 243.5f));
-      return ((RH / 100.0f) * es * 2165.0f) / (T + 273.15f);
+      return ((RH / 100.0f) * es * 216.7f) / (T + 273.15f);  // oprava: 2165 → 216.7 (bola 10× chyba)
   - platform: template
     name: "Index tepelného komfortu"
     id: comfort_index
