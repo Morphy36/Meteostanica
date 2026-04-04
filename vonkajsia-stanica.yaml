@@ -26,7 +26,7 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.5.1"
+    version: "3.7.0"
   on_boot:
     priority: 600
     then:
@@ -49,6 +49,7 @@ esphome:
             - component.update: bme280_sensor
             - delay: 100ms
       - component.update: battery_voltage
+      - component.update: sht41_sensor
       - component.update: ltr390_sensor
       # Boot guard: počkáme 10s kým sa kábel ustáli, až potom povolíme počítanie zrážok
       - delay: 10000ms
@@ -208,19 +209,9 @@ sensor:
     id: bme280_sensor
     update_interval: never
     temperature:
-      name: "Vonkajšia Teplota"
       id: bme280_temperature
+      internal: true            # SHT41 preberá teplotu — BME280 len pre MSL tlak (fallback)
       oversampling: 4x
-      filters:
-        - offset: 0.0
-        - lambda: |-
-            if (x < -40.0f || x > 60.0f) {
-              ESP_LOGW("bme280", "Odmietnutá teplota: %.1f°C", x);
-              id(sensor_error_count) += 1;
-              return {};
-            }
-            id(sensor_error_count) = 0;
-            return x;
     pressure:
       name: "Absolútny tlak"
       id: bme280_pressure
@@ -236,33 +227,39 @@ sensor:
         then:
           - lambda: |-
               float h = ${altitude_meters};
-              float t = id(bme280_temperature).has_state() ? id(bme280_temperature).state : 15.0f;
+              float t = id(sht41_temperature).has_state() ? id(sht41_temperature).state :
+                        (id(bme280_temperature).has_state() ? id(bme280_temperature).state : 15.0f);
               float msl = x * pow(1.0f - (0.0065f * h) / (t + 0.0065f * h + 273.15f), -5.257f);
               id(msl_pressure).publish_state(msl);
           - script.execute: update_pressure_trend
     humidity:
-      name: "Vonkajšia Vlhkosť"
       id: bme280_humidity
+      internal: true            # SHT41 preberá vlhkosť — BME280 vlhkosť sa nepoužíva
       oversampling: 4x
+  - platform: sht4x
+    address: 0x44
+    i2c_id: busa
+    id: sht41_sensor
+    update_interval: never
+    temperature:
+      name: "Vonkajšia Teplota"
+      id: sht41_temperature
+      filters:
+        - lambda: |-
+            if (x < -40.0f || x > 60.0f) {
+              ESP_LOGW("sht41", "Odmietnutá teplota: %.1f°C", x);
+              return {};
+            }
+            return x;
+    humidity:
+      name: "Vonkajšia Vlhkosť"
+      id: sht41_humidity
       filters:
         - lambda: |-
             if (x < 0.0f || x > 100.0f) {
-              ESP_LOGW("bme280", "Odmietnutá vlhkosť: %.1f%%", x);
+              ESP_LOGW("sht41", "Odmietnutá vlhkosť: %.1f%%", x);
               return {};
             }
-            // BME280 bug: senzor sa zasekne na 100% — odmietni len ak je zaseknutý 9+ meraní za sebou
-            // (= ~3 wake cykly) aby sme neblokovali legitímnu 100% vlhkosť (dážď, noc)
-            if (x >= 99.5f) {
-              id(humidity_stuck_count) += 1;
-              if (id(humidity_stuck_count) >= 9) {
-                ESP_LOGW("bme280", "Vlhkosť %.1f%% × %d meraní → zaseknutý senzor, ignorujem.", x, id(humidity_stuck_count));
-                id(sensor_error_count) += 1;
-                return {};
-              }
-              ESP_LOGI("bme280", "Vlhkosť %.1f%% (count=%d) → prijatá.", x, id(humidity_stuck_count));
-              return x;
-            }
-            id(humidity_stuck_count) = 0;
             return x;
         - exponential_moving_average:
             alpha: 0.3
@@ -444,9 +441,9 @@ sensor:
     device_class: temperature
     state_class: measurement
     lambda: |-
-      if (!id(bme280_temperature).has_state() || !id(bme280_humidity).has_state()) return NAN;
-      float T = id(bme280_temperature).state;
-      float RH = id(bme280_humidity).state;
+      if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
+      float T = id(sht41_temperature).state;
+      float RH = id(sht41_humidity).state;
       if (RH <= 0.0f) return NAN;
       float a = 17.27f, b = 237.7f;
       float alpha = ((a * T) / (b + T)) + log(RH / 100.0f);
@@ -460,9 +457,9 @@ sensor:
     icon: "mdi:water"
     state_class: measurement
     lambda: |-
-      if (!id(bme280_temperature).has_state() || !id(bme280_humidity).has_state()) return NAN;
-      float T = id(bme280_temperature).state;
-      float RH = id(bme280_humidity).state;
+      if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
+      float T = id(sht41_temperature).state;
+      float RH = id(sht41_humidity).state;
       float es = 6.112f * exp((17.67f * T) / (T + 243.5f));
       return ((RH / 100.0f) * es * 2165.0f) / (T + 273.15f);
   - platform: template
@@ -473,9 +470,9 @@ sensor:
     icon: "mdi:thermometer-check"
     state_class: measurement
     lambda: |-
-      if (!id(bme280_temperature).has_state() || !id(bme280_humidity).has_state()) return NAN;
-      float T = id(bme280_temperature).state;
-      float RH = id(bme280_humidity).state;
+      if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
+      float T = id(sht41_temperature).state;
+      float RH = id(sht41_humidity).state;
       return T - (0.55f - 0.0055f * RH) * (T - 14.5f);
   - platform: template
     name: "Pocitová teplota"
@@ -485,9 +482,9 @@ sensor:
     device_class: temperature
     state_class: measurement
     lambda: |-
-      if (!id(bme280_temperature).has_state() || !id(bme280_humidity).has_state() || !id(wind_speed).has_state()) return NAN;
-      float t = id(bme280_temperature).state;
-      float h = id(bme280_humidity).state;
+      if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state() || !id(wind_speed).has_state()) return NAN;
+      float t = id(sht41_temperature).state;
+      float h = id(sht41_humidity).state;
       float v = id(wind_speed).state;
       if (t <= 10.0f && v >= 4.8f)
         return 13.12f + (0.6215f*t) - (11.37f*pow(v,0.16f)) + (0.3965f*t*pow(v,0.16f));
@@ -595,8 +592,8 @@ binary_sensor:
     id: frost_risk
     icon: "mdi:snowflake-alert"
     lambda: |-
-      if (!id(bme280_temperature).has_state() || !id(dew_point).has_state()) return false;
-      return (id(bme280_temperature).state < ${frost_temp_threshold}) && (id(dew_point).state < 0.0f);
+      if (!id(sht41_temperature).has_state() || !id(dew_point).has_state()) return false;
+      return (id(sht41_temperature).state < ${frost_temp_threshold}) && (id(dew_point).state < 0.0f);
     filters:
       - delayed_on: 30s
   - platform: template
@@ -611,9 +608,9 @@ binary_sensor:
     id: rain_prediction
     icon: "mdi:weather-rainy"
     lambda: |-
-      if (!id(bme280_pressure).has_state() || !id(bme280_humidity).has_state()) return false;
+      if (!id(bme280_pressure).has_state() || !id(sht41_humidity).has_state()) return false;
       float cur_p = id(bme280_pressure).state;
-      float hum   = id(bme280_humidity).state;
+      float hum   = id(sht41_humidity).state;
       id(pressure_history)[id(history_index) % 6] = cur_p;
       id(pressure_time_index)[id(history_index) % 6] = id(boot_count);
       id(history_index) = (id(history_index) + 1) % 6;
@@ -647,8 +644,8 @@ text_sensor:
     icon: "mdi:hanger"
     update_interval: never
     lambda: |-
-      if (!id(bme280_temperature).has_state()) return std::string("Načítavam...");
-      float t    = id(bme280_temperature).state;
+      if (!id(sht41_temperature).has_state()) return std::string("Načítavam...");
+      float t    = id(sht41_temperature).state;
       float uvi  = id(uv_index_calc).has_state() ? id(uv_index_calc).state : 0.0f;
       float wind = id(wind_speed).has_state() ? id(wind_speed).state : 0.0f;
       bool rain  = id(rain_prediction).state || id(rain_detection).state;
@@ -727,7 +724,7 @@ text_sensor:
       bool frost  = id(frost_risk).state;
       float trend = id(pressure_trend_value);
       float uvi   = id(uv_index_calc).has_state() ? id(uv_index_calc).state : 0.0f;
-      float t     = id(bme280_temperature).has_state() ? id(bme280_temperature).state : NAN;
+      float t     = id(sht41_temperature).has_state() ? id(sht41_temperature).state : NAN;
       if (storm)  return std::string("⛈️ Búrka! Rýchly pokles tlaku.");
       if (rain_d) return std::string("🌧️ Momentálne prší.");
       if (rain_p) return std::string("🌦️ Predpoveď: Možný dážď.");
@@ -954,12 +951,13 @@ script:
             lambda: 'return id(i2c_initialized);'
           then:
             - component.update: bme280_sensor
+            - component.update: sht41_sensor
             - component.update: ltr390_sensor
           else:
             - logger.log:
                 level: WARN
                 tag: "sensors"
-                format: "I2C nie je OK, preskakujem BME280/LTR390."
+                format: "I2C nie je OK, preskakujem BME280/SHT41/LTR390."
       - component.update: battery_voltage
       - component.update: rain_sensor_voltage
       - component.update: wifi_signal_dbm
