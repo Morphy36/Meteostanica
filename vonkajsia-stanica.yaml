@@ -12,7 +12,7 @@ substitutions:
   sleep_failsafe: "4min"
   rain_calib_dry: "0.300"
   rain_calib_wet: "0.140"
-  wind_pullup_res: "10000"
+  wind_pullup_res: "1000"
   wifi_ap_timeout: "1min"
   wind_storm_threshold: "15.0"
   bat_eco_threshold: "20.0"
