@@ -209,8 +209,9 @@ sensor:
     id: bme280_sensor
     update_interval: never
     temperature:
+      name: "Teplota BME280"
       id: bme280_temperature
-      internal: true            # SHT41 preberá teplotu — BME280 len pre MSL tlak (fallback)
+      entity_category: diagnostic
       oversampling: 4x
     pressure:
       name: "Absolútny tlak"
@@ -233,8 +234,9 @@ sensor:
               id(msl_pressure).publish_state(msl);
           - script.execute: update_pressure_trend
     humidity:
+      name: "Vlhkosť BME280"
       id: bme280_humidity
-      internal: true            # SHT41 preberá vlhkosť — BME280 vlhkosť sa nepoužíva
+      entity_category: diagnostic
       oversampling: 4x
   - platform: sht4x
     address: 0x44
