@@ -10,8 +10,8 @@ substitutions:
   sleep_eco_mode_ms: "1800000"
   sleep_perf_mode_ms: "300000"
   sleep_failsafe: "4min"
-  rain_calib_dry: "1.033"
-  rain_calib_wet: "0.419"
+  rain_calib_dry: "0.300"
+  rain_calib_wet: "0.140"
   wind_pullup_res: "10000"
   wifi_ap_timeout: "1min"
   wind_storm_threshold: "15.0"
@@ -376,7 +376,9 @@ sensor:
   - platform: adc
     pin: GPIO33
     id: wind_vane_voltage
-    internal: true
+    name: "Napätie veternej ruže (debug)"
+    entity_category: diagnostic
+    internal: false
     update_interval: never     # manuálne volané 3× v read_all_sensors pre plnenie median filtra
     attenuation: 12db
     filters:
