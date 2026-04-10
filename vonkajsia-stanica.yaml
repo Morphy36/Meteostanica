@@ -12,7 +12,7 @@ substitutions:
   sleep_failsafe: "4min"
   rain_calib_dry: "0.300"
   rain_calib_wet: "0.140"
-  wind_pullup_res: "1000"
+  wind_pullup_res: "4700"
   wifi_ap_timeout: "1min"
   wind_storm_threshold: "15.0"
   bat_eco_threshold: "20.0"
@@ -381,7 +381,7 @@ sensor:
     name: "Napätie veternej ruže (debug)"
     entity_category: diagnostic
     internal: false
-    update_interval: 5s        # DOČASNE pre ladenie — vrátiť na never po overení
+    update_interval: never     # manuálne volané 3× v read_all_sensors pre plnenie median filtra
     attenuation: 12db
     filters:
       - median:
