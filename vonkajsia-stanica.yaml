@@ -381,7 +381,7 @@ sensor:
     name: "Napätie veternej ruže (debug)"
     entity_category: diagnostic
     internal: false
-    update_interval: never     # manuálne volané 3× v read_all_sensors pre plnenie median filtra
+    update_interval: 5s        # DOČASNE pre ladenie — vrátiť na never po overení
     attenuation: 12db
     filters:
       - median:
