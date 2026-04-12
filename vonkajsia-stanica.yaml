@@ -88,8 +88,7 @@ wifi:
       - logger.log:
           level: INFO
           tag: "wifi"
-          format: "WiFi OK. IP: 192.168.0.249 | RSSI: %d dBm"
-          args: ['WiFi.RSSI()']
+          format: "WiFi OK. IP: 192.168.0.249"
       - lambda: 'id(wifi_fail_count) = 0;'
   on_disconnect:
     then:
