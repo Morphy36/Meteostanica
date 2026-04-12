@@ -1,6 +1,6 @@
 substitutions:
   dev_name: "vonkajsia-stanica"
-  friendly_name: "Vonkajšia Meteostanica"
+  friendly_name: "Meteostanica 1"
   altitude_meters: "250"
   batt_multiplier: "2.0"
   batt_min_voltage: "3.0"
@@ -652,10 +652,14 @@ text_sensor:
       float t    = id(sht41_temperature).state;
       float uvi  = id(uv_index_calc).has_state() ? id(uv_index_calc).state : 0.0f;
       float wind = id(wind_speed).has_state() ? id(wind_speed).state : 0.0f;
+      float lux  = id(ambient_light).has_state() ? id(ambient_light).state : -1.0f;
       bool rain  = id(rain_prediction).state || id(rain_detection).state;
       bool frost = id(frost_risk).state;
       bool windy = wind > 25.0f;
       bool highUV = uvi >= 6.0f;
+      bool daytime = lux > 50.0f;
+      bool cloudy  = daytime && lux < 5000.0f;
+      bool sunny   = daytime && lux >= 20000.0f;
       if (frost) return std::string("🧊 Pozor na mráz! Protišmykové topánky, rukavice.");
       if (rain) {
         if (t < 3)  return std::string("🥶 Ľadový dážď! Zimná bunda, dáždnik, pozor na námrazu!");
@@ -666,15 +670,23 @@ text_sensor:
       if (t < -5) return std::string("🧊 Tuhý mráz! Vrstvy, zimná bunda, čiapka, šál, rukavice.");
       if (t < 5)  return std::string("❄️ Mráz! Zimná bunda, čiapka, rukavice.");
       if (t < 15) {
-        if (windy) return std::string("💨 Chladno a veterno. Vetrovka + sveter.");
+        if (windy && cloudy) return std::string("💨 Chladno, veterno a zamračené. Vetrovka + sveter.");
+        if (windy)  return std::string("💨 Chladno a veterno. Vetrovka + sveter.");
+        if (cloudy) return std::string("☁️ Chladno a zamračené. Sveter a bunda.");
         return std::string("🧥 Chladno. Sveter a bunda.");
       }
-      if (t < 22) return std::string("👕 Príjemne. Mikina alebo tričko.");
-      if (t < 30) {
-        if (highUV) return std::string("☀️ Teplo + silné UV! Tričko, opaľovací krém SPF50+, klobúk.");
-        return std::string("☀️ Teplo. Tričko, nezabudni na opaľovací krém.");
+      if (t < 22) {
+        if (cloudy) return std::string("⛅ Príjemne, ale zamračené. Ľahká bunda alebo mikina.");
+        return std::string("👕 Príjemne. Mikina alebo tričko.");
       }
-      return std::string("🔥 Horúčava! Naľahko, veľa pitia, hľadaj tieň.");
+      if (t < 30) {
+        if (cloudy) return std::string("☁️ Teplo ale bez slnka. Tričko, môžeš zabudnúť krém.");
+        if (highUV && sunny) return std::string("☀️ Teplo + silné UV! Tričko, opaľovací krém SPF50+, klobúk.");
+        if (sunny)  return std::string("☀️ Teplo a slnečno. Tričko, nezabudni na opaľovací krém.");
+        return std::string("🌤️ Teplo. Tričko.");
+      }
+      if (cloudy) return std::string("🌥️ Horúco aj pod mraky. Naľahko, veľa pitia.");
+      return std::string("🔥 Horúčava a slnko! Naľahko, veľa pitia, hľadaj tieň, SPF50+.");
   - platform: template
     name: "Smer vetra (Text)"
     id: wind_dir_text
@@ -729,17 +741,41 @@ text_sensor:
       float trend = id(pressure_trend_value);
       float uvi   = id(uv_index_calc).has_state() ? id(uv_index_calc).state : 0.0f;
       float t     = id(sht41_temperature).has_state() ? id(sht41_temperature).state : NAN;
+      float lux   = id(ambient_light).has_state() ? id(ambient_light).state : -1.0f;
+      // Obloha podľa svetla (len cez deň)
+      bool daytime      = lux > 50.0f;
+      bool very_cloudy  = daytime && lux < 500.0f;    // tmavé mraky
+      bool cloudy       = daytime && lux < 5000.0f;   // zamračené
+      bool partly_cloudy= daytime && lux < 20000.0f;  // čiastočne zamračené
+      bool sunny        = daytime && lux >= 20000.0f; // jasno
       if (storm)  return std::string("⛈️ Búrka! Rýchly pokles tlaku.");
-      if (rain_d) return std::string("🌧️ Momentálne prší.");
-      if (rain_p) return std::string("🌦️ Predpoveď: Možný dážď.");
+      if (rain_d) {
+        if (very_cloudy) return std::string("🌧️ Prší, tmavé mraky.");
+        return std::string("🌧️ Momentálne prší.");
+      }
+      if (rain_p) {
+        if (cloudy) return std::string("🌦️ Zamračené — možný dážď.");
+        return std::string("🌦️ Predpoveď: Možný dážď.");
+      }
       if (frost)  return std::string("🧊 Hrozí mráz — pozor na poľadovicu.");
       if (!isnan(t)) {
         if (trend > 1.0f) {
-          if (uvi >= 6.0f) return std::string("☀️ Vyjasňuje sa, silné UV žiarenie.");
+          if (sunny)           return std::string("☀️ Vyjasňuje sa, slnečno.");
+          if (partly_cloudy)   return std::string("⛅ Vyjasňuje sa, čiastočne zamračené.");
           return std::string("⛅ Vyjasňuje sa.");
         }
-        if (trend < -1.0f) return std::string("🌤️ Zhoršovanie počasia.");
-        if (uvi >= 3.0f)   return std::string("☀️ Jasno, stabilný tlak.");
+        if (trend < -1.0f) {
+          if (very_cloudy)     return std::string("☁️ Zhoršovanie, tmavé mraky.");
+          if (cloudy)          return std::string("🌥️ Zhoršovanie, zamračené.");
+          return std::string("🌤️ Zhoršovanie počasia.");
+        }
+        // Stabilný tlak — obloha rozhoduje
+        if (sunny && uvi >= 6.0f) return std::string("☀️ Jasno, silné UV žiarenie.");
+        if (sunny)               return std::string("☀️ Jasno a slnečno.");
+        if (partly_cloudy)       return std::string("⛅ Čiastočne zamračené.");
+        if (cloudy)              return std::string("☁️ Zamračené.");
+        if (very_cloudy)         return std::string("☁️ Silne zamračené.");
+        if (uvi >= 3.0f)         return std::string("☀️ Jasno, stabilný tlak.");
       }
       return std::string("🌡️ Stabilné počasie.");
   - platform: template
