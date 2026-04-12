@@ -954,14 +954,25 @@ script:
                         - delay: 3s
                   - script.execute: check_and_enter_deep_sleep
                 else:
-                  - logger.log:
-                      level: WARN
-                      tag: "wifi"
-                      format: "API nedostupné → Spím 5 min."
-                  - lambda: 'id(wifi_fail_count) += 1;'
-                  - deep_sleep.enter:
-                      id: deep_sleep_control
-                      sleep_duration: 5min
+                  - if:
+                      condition:
+                        lambda: 'return id(ota_mode_active);'
+                      then:
+                        - logger.log:
+                            level: INFO
+                            tag: "ota"
+                            format: "OTA režim — API ešte nepripojené, čakám 30s a skúsim znova."
+                        - delay: 30s
+                        - script.execute: wifi_connect_logic
+                      else:
+                        - logger.log:
+                            level: WARN
+                            tag: "wifi"
+                            format: "API nedostupné → Spím 5 min."
+                        - lambda: 'id(wifi_fail_count) += 1;'
+                        - deep_sleep.enter:
+                            id: deep_sleep_control
+                            sleep_duration: 5min
           else:
             - lambda: 'id(wifi_fail_count) += 1;'
             - logger.log:
