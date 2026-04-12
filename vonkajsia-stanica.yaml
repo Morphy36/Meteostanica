@@ -32,6 +32,7 @@ esphome:
     then:
       - script.execute: failsafe_guard
       - lambda: |-
+          id(ota_mode_active) = true;  // DOČASNÉ: zostaň hore pre vývoj
           id(boot_count) += 1;
           ESP_LOGI("boot", "=== BOOT #%d ===", id(boot_count));
       - output.turn_on: rain_sensor_power
