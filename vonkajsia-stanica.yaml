@@ -1091,12 +1091,13 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(ota_mode_active);'
+            lambda: 'return id(ota_mode_active) || id(uptime_sensor).state < 60.0f;'
           then:
             - logger.log:
                 level: INFO
                 tag: "ota"
-                format: "OTA režim aktívny — blokujem deep sleep."
+                format: "Blokujem deep sleep (OTA=%d, uptime=%.0fs)."
+                args: ['(int)id(ota_mode_active)', 'id(uptime_sensor).state']
           else:
             - lambda: |-
                 float bat   = id(battery_level).has_state() ? id(battery_level).state : 50.0f;
