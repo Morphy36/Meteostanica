@@ -1128,8 +1128,10 @@ script:
     then:
       - if:
           condition:
-            not:
-              api.connected:
+            and:
+              - wifi.connected
+              - not:
+                  api.connected:
           then:
             - script.execute: check_and_enter_deep_sleep
 interval:
