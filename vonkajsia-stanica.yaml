@@ -1090,31 +1090,40 @@ script:
   - id: check_and_enter_deep_sleep
     mode: single
     then:
-      - lambda: |-
-          float bat   = id(battery_level).has_state() ? id(battery_level).state : 50.0f;
-          bool  rain  = id(rain_detection).state;
-          bool  rain_p = id(rain_prediction).state;
-          bool  storm = id(storm_warning).state;
-          float wind  = id(wind_speed).has_state() ? id(wind_speed).state : 0.0f;
-          uint32_t sleep_ms = ${sleep_normal_mode_ms};
-          int mode_id = 0;
-          if (bat < ${bat_eco_threshold}) {
-            sleep_ms = ${sleep_eco_mode_ms}; mode_id = 2;
-          } else if (storm && bat > ${bat_storm_min}) {
-            sleep_ms = ${sleep_storm_mode_ms}; mode_id = 1;
-          } else if ((rain || rain_p || wind > ${wind_storm_threshold}) && bat > ${bat_storm_min}) {
-            sleep_ms = ${sleep_storm_mode_ms}; mode_id = 1;
-          } else if (bat > ${bat_perf_threshold}) {
-            sleep_ms = ${sleep_perf_mode_ms}; mode_id = 3;
-          }
-          id(last_sleep_duration_s) = (float)sleep_ms / 1000.0f;
-          id(last_sleep_mode) = mode_id;
-          const char* names[] = {"Normal","STORM","ECO","PERF"};
-          ESP_LOGI("sleep","Režim: %s | %us | Bat: %.0f%% | Wind: %.1fkm/h | Rain:%s Storm:%s",
-            names[mode_id], sleep_ms/1000, bat, wind,
-            rain?"YES":"NO", storm?"YES":"NO");
-          id(deep_sleep_control).set_sleep_duration(sleep_ms);
-      - deep_sleep.enter: deep_sleep_control
+      - if:
+          condition:
+            lambda: 'return id(ota_mode_active);'
+          then:
+            - logger.log:
+                level: INFO
+                tag: "ota"
+                format: "OTA režim aktívny — blokujem deep sleep."
+          else:
+            - lambda: |-
+                float bat   = id(battery_level).has_state() ? id(battery_level).state : 50.0f;
+                bool  rain  = id(rain_detection).state;
+                bool  rain_p = id(rain_prediction).state;
+                bool  storm = id(storm_warning).state;
+                float wind  = id(wind_speed).has_state() ? id(wind_speed).state : 0.0f;
+                uint32_t sleep_ms = ${sleep_normal_mode_ms};
+                int mode_id = 0;
+                if (bat < ${bat_eco_threshold}) {
+                  sleep_ms = ${sleep_eco_mode_ms}; mode_id = 2;
+                } else if (storm && bat > ${bat_storm_min}) {
+                  sleep_ms = ${sleep_storm_mode_ms}; mode_id = 1;
+                } else if ((rain || rain_p || wind > ${wind_storm_threshold}) && bat > ${bat_storm_min}) {
+                  sleep_ms = ${sleep_storm_mode_ms}; mode_id = 1;
+                } else if (bat > ${bat_perf_threshold}) {
+                  sleep_ms = ${sleep_perf_mode_ms}; mode_id = 3;
+                }
+                id(last_sleep_duration_s) = (float)sleep_ms / 1000.0f;
+                id(last_sleep_mode) = mode_id;
+                const char* names[] = {"Normal","STORM","ECO","PERF"};
+                ESP_LOGI("sleep","Režim: %s | %us | Bat: %.0f%% | Wind: %.1fkm/h | Rain:%s Storm:%s",
+                  names[mode_id], sleep_ms/1000, bat, wind,
+                  rain?"YES":"NO", storm?"YES":"NO");
+                id(deep_sleep_control).set_sleep_duration(sleep_ms);
+            - deep_sleep.enter: deep_sleep_control
   - id: periodic_sleep_check
     mode: single
     then:
