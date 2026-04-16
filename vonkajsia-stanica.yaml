@@ -119,8 +119,8 @@ api:
 ota:
   platform: esphome
 logger:
-  level: DEBUG
-  baud_rate: 115200
+  level: WARN
+  baud_rate: 0
 i2c:
   sda: GPIO22
   scl: GPIO21
