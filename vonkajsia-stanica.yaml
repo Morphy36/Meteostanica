@@ -103,19 +103,14 @@ api:
       - logger.log:
           level: INFO
           tag: "api"
-          format: "HA klient pripojený — Blokujem Deep Sleep."
-      - deep_sleep.prevent: deep_sleep_control
+          format: "HA klient pripojený."
       - script.stop: failsafe_guard
   on_client_disconnected:
     then:
       - logger.log:
           level: INFO
           tag: "api"
-          format: "HA klient odpojený — Idem spať."
-      - deep_sleep.allow: deep_sleep_control
-      - delay: 2s
-      - script.stop: periodic_sleep_check
-      - script.execute: check_and_enter_deep_sleep
+          format: "HA klient odpojený."
 ota:
   platform: esphome
 logger:
@@ -949,8 +944,11 @@ script:
                             format: "OTA režim — zostanem hore 3 minúty pre aktualizáciu."
                         - delay: 3min
                         - lambda: 'id(ota_mode_active) = false;'
-                      else:
-                        - delay: 3s
+                  # Počkaj kým uptime dosiahne 60s — daj HA čas spracovať dáta
+                  - wait_until:
+                      condition:
+                        lambda: 'return id(uptime_sensor).state >= 60.0f;'
+                      timeout: 120s
                   - script.execute: check_and_enter_deep_sleep
                 else:
                   - if:
