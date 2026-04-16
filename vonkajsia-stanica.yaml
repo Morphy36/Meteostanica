@@ -113,8 +113,6 @@ api:
           format: "HA klient odpojený."
 ota:
   platform: esphome
-web_server:
-  port: 80
 logger:
   level: DEBUG
   baud_rate: 0
