@@ -515,6 +515,8 @@ sensor:
     lambda: |-
       if (!id(battery_voltage).has_state()) return NAN;
       float v = id(battery_voltage).state;
+      // Ak napätie < 2.9V — GPIO35 pláva bez batérie, vráť NAN (neznáme)
+      if (v < 2.9f) return NAN;
       if (v >= 4.15f) return 100.0f;
       if (v >= 4.0f)  return 85.0f  + (v - 4.0f)  * 100.0f;
       if (v >= 3.75f) return 35.0f  + (v - 3.75f) * 200.0f;
