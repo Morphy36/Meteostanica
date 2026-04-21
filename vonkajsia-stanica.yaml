@@ -71,7 +71,7 @@ esp32:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  power_save_mode: light
+  power_save_mode: none
   output_power: 8.5dBm
   ap:
     ssid: "Meteo Stanica AP"
@@ -82,7 +82,7 @@ wifi:
       - logger.log:
           level: INFO
           tag: "wifi"
-          format: "WiFi OK. IP: 192.168.0.249"
+          format: "WiFi OK."
       - lambda: 'id(wifi_fail_count) = 0;'
   on_disconnect:
     then:
@@ -918,7 +918,7 @@ script:
     then:
       - wait_until:
           condition: wifi.connected
-          timeout: 15s
+          timeout: 30s
       - if:
           condition: wifi.connected
           then:
