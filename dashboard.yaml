@@ -11,14 +11,6 @@ views:
       - title: ""
         cards:
           - type: markdown
-            card_mod:
-              style: |
-                ha-card {
-                  background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
-                  color: white;
-                  border-radius: 16px;
-                  padding: 8px;
-                }
             content: >
               ## {{ states('sensor.vonkajsia_stanica_predpoved_pocasia') }}
 
