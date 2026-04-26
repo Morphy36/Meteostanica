@@ -1,0 +1,1552 @@
+title: Home
+background:
+  opacity: 100
+  alignment: center
+  size: auto
+  repeat: no-repeat
+  attachment: fixed
+  image: /api/image/serve/884f357cf0499f101a84bdd29d5c2029/original
+cards:
+- square: false
+  type: grid
+  title: Obývačka svetlá
+  cards:
+  - type: custom:slider-button-card
+    entity: light.obyvacka_luster_telka_skupina
+    name: Telka
+    icon:
+      show: true
+      use_state_color: true
+      size: 25px
+      icon: mdi:lightbulb-group
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    styles:
+      card:
+        width: 70px
+        height: 70px
+        border-radius: 15px
+        background-color: '#2d2d2d'
+        transition: all 0.3s ease
+        cursor: pointer
+        box-shadow: 0px 0px 20px 0px rgba(0,0,0,0)
+      icon:
+        transition: all 0.3s ease
+        align-self: center
+      name:
+        font-size: 12px
+        color: rgba(255, 255, 255, 0.7)
+        justify-self: center
+        align-self: end
+        padding-bottom: 5px
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    template: "[[[ \n  let iconColor = (entity.state === 'on') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)';\n\
+      \  let shadowColor = 'rgba(0,0,0,0)'; \n  if (entity.state === 'on') { \n    if (entity.attributes.rgb_color) { \n \
+      \     shadowColor = `rgba(${entity.attributes.rgb_color.join(',')}, 0.5)`; \n    } else { \n      shadowColor = 'rgba(253,\
+      \ 216, 53, 0.5)'; \n    } \n  } \n  return { \n    card: { \n      '--ha-card-box-shadow': `0px 0px 20px 0px ${shadowColor}`,\
+      \ \n      'background-color': (entity.state === 'on') ? '#3d3d3d' : '#2d2d2d' \n    }, \n    icon: { \n      color:\
+      \ iconColor \n    } \n  }; \n]]] \n"
+  - type: custom:slider-button-card
+    entity: light.lampa
+    name: Lampa
+    icon:
+      show: true
+      use_state_color: true
+      size: 25px
+      icon: mdi:desk-lamp
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    styles:
+      card:
+        width: 70px
+        height: 70px
+        border-radius: 15px
+        background-color: '#2d2d2d'
+        transition: all 0.3s ease
+        cursor: pointer
+        box-shadow: 0px 0px 20px 0px rgba(0,0,0,0)
+      icon:
+        transition: all 0.3s ease
+        align-self: center
+      name:
+        font-size: 12px
+        color: rgba(255, 255, 255, 0.7)
+        justify-self: center
+        align-self: end
+        padding-bottom: 5px
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    template: "[[[ \n  let iconColor = (entity.state === 'on') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)';\n\
+      \  let shadowColor = 'rgba(0,0,0,0)'; \n  if (entity.state === 'on') { \n    if (entity.attributes.rgb_color) { \n \
+      \     shadowColor = `rgba(${entity.attributes.rgb_color.join(',')}, 0.5)`; \n    } else { \n      shadowColor = 'rgba(253,\
+      \ 216, 53, 0.5)'; \n    } \n  } \n  return { \n    card: { \n      '--ha-card-box-shadow': `0px 0px 20px 0px ${shadowColor}`,\
+      \ \n      'background-color': (entity.state === 'on') ? '#3d3d3d' : '#2d2d2d' \n    }, \n    icon: { \n      color:\
+      \ iconColor \n    } \n  }; \n]]] \n"
+  - type: custom:slider-button-card
+    entity: light.obyvacka_luster_gauc_skupina
+    name: Gauč
+    icon:
+      show: true
+      use_state_color: true
+      size: 25px
+      icon: mdi:lightbulb-group
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    styles:
+      card:
+        width: 70px
+        height: 70px
+        border-radius: 15px
+        background-color: '#2d2d2d'
+        transition: all 0.3s ease
+        cursor: pointer
+        box-shadow: 0px 0px 20px 0px rgba(0,0,0,0)
+      icon:
+        transition: all 0.3s ease
+        align-self: center
+      name:
+        font-size: 12px
+        color: rgba(255, 255, 255, 0.7)
+        justify-self: center
+        align-self: end
+        padding-bottom: 5px
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    template: "[[[ \n  let iconColor = (entity.state === 'on') ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.4)';\n\
+      \  let shadowColor = 'rgba(0,0,0,0)'; \n  if (entity.state === 'on') { \n    if (entity.attributes.rgb_color) { \n \
+      \     shadowColor = `rgba(${entity.attributes.rgb_color.join(',')}, 0.5)`; \n    } else { \n      shadowColor = 'rgba(253,\
+      \ 216, 53, 0.5)'; \n    } \n  } \n  return { \n    card: { \n      '--ha-card-box-shadow': `0px 0px 20px 0px ${shadowColor}`,\
+      \ \n      'background-color': (entity.state === 'on') ? '#3d3d3d' : '#2d2d2d' \n    }, \n    icon: { \n      color:\
+      \ iconColor \n    } \n\n  }; \n]]] \n"
+  columns: 3
+- type: vertical-stack
+  cards:
+  - type: custom:button-card
+    entity: light.spalna_svetla_skupina
+    name: Spálňa svetlá
+    icon: mdi:ceiling-light-multiple
+    tap_action:
+      action: toggle
+    styles:
+      card:
+      - height: 50px
+      - border-radius: 15px
+      - padding: 0 15px
+      - margin: 16px 8px 8px 8px
+      - background-color: '#2d2d2d'
+      - transition: all 0.3s ease
+      name:
+      - font-size: 16px
+      - font-weight: bold
+      - justify-self: start
+      icon:
+      - align-self: center
+      - justify-self: end
+      - color: rgba(255, 255, 255, 0.4)
+      - transition: all 0.3s ease
+    state:
+    - value: 'on'
+      styles:
+        card:
+        - background-color: '#3d3d3d'
+        - box-shadow: "[[[ \n  if (entity.attributes && entity.attributes.rgb_color) { \n    return `0px 0px 20px 0px rgba(${entity.attributes.rgb_color.join(',')},\
+            \ 0.5)`; \n  } \n  return '0px 0px 20px 0px rgba(253, 216, 53, 0.5)'; \n]]] \n"
+        icon:
+        - color: rgba(255, 255, 255, 0.9)
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+    - type: custom:slider-button-card
+      entity: light.spalna_ikea_zigbee
+      name: Luster
+      template: "[[[ \n  let backgroundColor = '#2d2d2d'; \n  let shadowColor = 'rgba(0,0,0,0)'; \n  let iconColor = 'rgba(255,\
+        \ 255, 255, 0.4)'; \n  if (entity && entity.state === 'on') { \n    backgroundColor = '#3d3d3d'; \n    iconColor =\
+        \ 'rgba(255, 255, 255, 0.9)'; \n    if (entity.attributes && entity.attributes.rgb_color) { \n      shadowColor =\
+        \ `rgba(${entity.attributes.rgb_color.join(',')}, 0.5)`; \n    } else { \n      shadowColor = 'rgba(253, 216, 53,\
+        \ 0.5)'; \n    } \n  } \n  return { \n    card: { 'background-color': backgroundColor, '--ha-card-box-shadow': `0px\
+        \ 0px 20px 0px ${shadowColor}` },\n    icon: { color: iconColor } \n  }; \n]]] \n"
+      styles:
+        card:
+        - width: 70px
+        - height: 70px
+        - border-radius: 15px
+        - transition: all 0.3s ease
+        - cursor: pointer
+        icon:
+        - transition: all 0.3s ease
+        - align-self: center
+        name:
+        - font-size: 12px
+        - color: rgba(255, 255, 255, 0.7)
+        - justify-self: center
+        - align-self: end
+        - padding-bottom: 5px
+      icon:
+        show: true
+        icon: mdi:lightbulb-group
+      slider:
+        background: gradient
+        direction: left-right
+        value_attribute: brightness_pct
+      tap_action:
+        action: toggle
+      hold_action:
+        action: more-info
+    - type: custom:slider-button-card
+      entity: light.extended_color_light_3_2
+      name: Lampa Ľ
+      template: "[[[ \n  let backgroundColor = '#2d2d2d'; \n  let shadowColor = 'rgba(0,0,0,0)'; \n  let iconColor = 'rgba(255,\
+        \ 255, 255, 0.4)'; \n  if (entity && entity.state === 'on') { \n    backgroundColor = '#3d3d3d'; \n    iconColor =\
+        \ 'rgba(255, 255, 255, 0.9)'; \n    if (entity.attributes && entity.attributes.rgb_color) { \n      shadowColor =\
+        \ `rgba(${entity.attributes.rgb_color.join(',')}, 0.5)`; \n    } else { \n      shadowColor = 'rgba(253, 216, 53,\
+        \ 0.5)'; \n    } \n  } \n  return { \n    card: { 'background-color': backgroundColor, '--ha-card-box-shadow': `0px\
+        \ 0px 20px 0px ${shadowColor}` },\n    icon: { color: iconColor } \n  }; \n]]] \n"
+      styles:
+        card:
+        - width: 70px
+        - height: 70px
+        - border-radius: 15px
+        - transition: all 0.3s ease
+        - cursor: pointer
+        icon:
+        - transition: all 0.3s ease
+        - align-self: center
+        name:
+        - font-size: 12px
+        - color: rgba(255, 255, 255, 0.7)
+        - justify-self: center
+        - align-self: end
+        - padding-bottom: 5px
+      icon:
+        show: true
+        icon: mdi:lamp
+      slider:
+        background: gradient
+        direction: left-right
+        value_attribute: brightness_pct
+      tap_action:
+        action: toggle
+      hold_action:
+        action: more-info
+    - type: custom:slider-button-card
+      entity: light.extended_color_light_3
+      name: Lampa P
+      template: "[[[ \n  let backgroundColor = '#2d2d2d'; \n  let shadowColor = 'rgba(0,0,0,0)'; \n  let iconColor = 'rgba(255,\
+        \ 255, 255, 0.4)'; \n  if (entity && entity.state === 'on') { \n    backgroundColor = '#3d3d3d'; \n    iconColor =\
+        \ 'rgba(255, 255, 255, 0.9)'; \n    if (entity.attributes && entity.attributes.rgb_color) { \n      shadowColor =\
+        \ `rgba(${entity.attributes.rgb_color.join(',')}, 0.5)`; \n    } else { \n      shadowColor = 'rgba(253, 216, 53,\
+        \ 0.5)'; \n    } \n  } \n  return { \n    card: { 'background-color': backgroundColor, '--ha-card-box-shadow': `0px\
+        \ 0px 20px 0px ${shadowColor}` },\n    icon: { color: iconColor } \n  }; \n]]] \n"
+      styles:
+        card:
+        - width: 70px
+        - height: 70px
+        - border-radius: 15px
+        - transition: all 0.3s ease
+        - cursor: pointer
+        icon:
+        - transition: all 0.3s ease
+        - align-self: center
+        name:
+        - font-size: 12px
+        - color: rgba(255, 255, 255, 0.7)
+        - justify-self: center
+        - align-self: end
+        - padding-bottom: 5px
+      icon:
+        show: true
+        icon: mdi:lamp
+      slider:
+        background: gradient
+        direction: left-right
+        value_attribute: brightness_pct
+      tap_action:
+        action: toggle
+      hold_action:
+        action: more-info
+- type: custom:vertical-stack-in-card
+  cards:
+  - type: custom:mushroom-title-card
+    title: Obývačka
+  - type: grid
+    square: false
+    columns: 2
+    cards:
+    - type: custom:mushroom-entity-card
+      entity: sensor.temperature_sensor_3
+      primary_info: state
+      secondary_info: name
+      name: Teplota
+      icon_color: red
+    - type: custom:mushroom-entity-card
+      entity: sensor.temperature_sensor_humidity_sensor_3
+      primary_info: state
+      secondary_info: name
+      name: Vlhkosť
+      icon_color: blue
+  - type: custom:mini-graph-card
+    entities:
+    - entity: sensor.temperature_sensor_humidity_sensor_3
+      name: Vlhkosť
+      color: var(--blue-color)
+      y_axis: secondary
+      show_line: false
+    - entity: sensor.temperature_sensor_3
+      name: Teplota
+    color_thresholds:
+    - value: 25
+      color: '#6e0000'
+    - value: 24
+      color: '#470101'
+    - value: 23
+      color: '#ff0000'
+    - value: 22
+      color: '#ffba00'
+    - value: 21
+      color: '#00aa99'
+    - value: 20
+      color: '#0090ff'
+    - value: 19
+      color: '#004e8b'
+    - value: 18
+      color: '#002542'
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 50
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+- type: custom:vertical-stack-in-card
+  cards:
+  - type: custom:mushroom-title-card
+    title: Spálňa
+  - type: grid
+    square: false
+    columns: 2
+    cards:
+    - type: custom:mushroom-entity-card
+      entity: sensor.aqara_temp_humidity_sensor_teplota
+      primary_info: state
+      secondary_info: name
+      name: Teplota
+      icon_color: red
+    - type: custom:mushroom-entity-card
+      entity: sensor.aqara_temp_humidity_sensor_vlhkost
+      primary_info: state
+      secondary_info: name
+      name: Vlhkosť
+      icon_color: blue
+  - type: custom:mini-graph-card
+    entities:
+    - entity: sensor.aqara_temp_humidity_sensor_vlhkost
+      name: Vlhkosť
+      color: var(--blue-color)
+      y_axis: secondary
+      show_line: false
+    - entity: sensor.aqara_temp_humidity_sensor_teplota
+      name: Teplota
+    color_thresholds:
+    - value: 25
+      color: '#6e0000'
+    - value: 24
+      color: '#470101'
+    - value: 23
+      color: '#ff0000'
+    - value: 22
+      color: '#ffba00'
+    - value: 21
+      color: '#00aa99'
+    - value: 20
+      color: '#0090ff'
+    - value: 19
+      color: '#004e8b'
+    - value: 18
+      color: '#002542'
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 50
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+- type: custom:vertical-stack-in-card
+  cards:
+  - type: custom:mushroom-title-card
+    title: Vonku
+    subtitle: Prehľad počasia
+    card_mod:
+      style: "ha-card { \n  padding-bottom: 0px !important; \n} \n"
+  - type: grid
+    square: false
+    columns: 3
+    cards:
+    - type: custom:mushroom-entity-card
+      entity: sensor.temperature_sensor_2
+      primary_info: state
+      secondary_info: name
+      name: Teplota
+      icon_color: red
+      layout: vertical
+      card_mod:
+        style: "ha-card { \n  box-shadow: none; \n  background: none; \n  padding-top: 5px !important; \n  padding-bottom:\
+          \ 5px !important; \n} \nmushroom-state-info { \n  font-size: 1.1em; \n  font-weight: bold; \n} \n"
+    - type: custom:mushroom-entity-card
+      entity: sensor.aqara_temp_humidity_sensor_vlhkost_2
+      primary_info: state
+      secondary_info: name
+      name: Vlhkosť
+      icon_color: blue
+      layout: vertical
+      card_mod:
+        style: "ha-card { \n  box-shadow: none; \n  background: none; \n  padding-top: 5px !important; \n  padding-bottom:\
+          \ 5px !important; \n} \nmushroom-state-info { \n  font-size: 1.1em; \n  font-weight: bold; \n} \n"
+    - type: custom:mushroom-entity-card
+      entity: sensor.lumi_weather_v1_ffa6_atmospheric_pressure
+      primary_info: state
+      secondary_info: name
+      name: Tlak
+      icon_color: green
+      layout: vertical
+      card_mod:
+        style: "ha-card { \n  box-shadow: none; \n  background: none; \n  padding-top: 5px !important; \n  padding-bottom:\
+          \ 5px !important; \n\n} \nmushroom-state-info { \n  font-size: 1.1em; \n  font-weight: bold; \n} \n"
+  - type: custom:mini-graph-card
+    name: Teplota & Vlhkosť
+    entities:
+    - entity: sensor.temperature_sensor_2
+      name: Teplota
+      show_fill: true
+    - entity: sensor.aqara_temp_humidity_sensor_vlhkost_2
+      name: Vlhkosť
+      color: var(--blue-color)
+      y_axis: secondary
+      show_line: false
+      show_points: false
+    color_thresholds:
+    - value: 35
+      color: '#d32f2f'
+    - value: 30
+      color: '#f44336'
+    - value: 25
+      color: '#e57373'
+    - value: 20
+      color: '#ffca28'
+    - value: 15
+      color: '#009688'
+    - value: 10
+      color: '#03a9f4'
+    - value: 5
+      color: '#1565c0'
+    - value: 0
+      color: '#0d47a1'
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 70
+    animate: true
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+    card_mod:
+      style: "ha-card { \n  margin-top: -10px; # Mierne spojenie s gridom nad tým \n} \n"
+  - type: custom:mini-graph-card
+    name: Tlak
+    entities:
+    - entity: sensor.lumi_weather_v1_ffa6_atmospheric_pressure
+      name: Tlak
+      show_points: false
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 70
+    animate: true
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+    color_thresholds:
+    - value: 1025
+      color: '#f39c12'
+    - value: 985
+      color: '#2ecc71'
+    - value: 975
+      color: '#3498db'
+- type: custom:vertical-stack-in-card
+  cards:
+  - type: custom:mushroom-title-card
+    title: Kuchyňa
+  - type: grid
+    square: false
+    columns: 2
+    cards:
+    - type: custom:mushroom-entity-card
+      entity: sensor.temperature_sensor_4
+      primary_info: state
+      secondary_info: name
+      name: Teplota
+      icon_color: red
+    - type: custom:mushroom-entity-card
+      entity: sensor.temperature_sensor_humidity_sensor_4
+      primary_info: state
+      secondary_info: name
+      name: Vlhkosť
+      icon_color: blue
+  - type: custom:mini-graph-card
+    entities:
+    - entity: sensor.temperature_sensor_humidity_sensor_4
+      name: Vlhkosť
+      color: var(--blue-color)
+      y_axis: secondary
+      show_line: false
+    - entity: sensor.temperature_sensor_4
+      name: Teplota
+    color_thresholds:
+    - value: 25
+      color: '#6e0000'
+    - value: 24
+      color: '#470101'
+    - value: 23
+      color: '#ff0000'
+    - value: 22
+      color: '#ffba00'
+    - value: 21
+      color: '#00aa99'
+    - value: 20
+      color: '#0090ff'
+    - value: 19
+      color: '#004e8b'
+    - value: 18
+      color: '#002542'
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 50
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+- type: custom:vertical-stack-in-card
+  cards:
+  - type: custom:mushroom-title-card
+    title: WC
+  - type: grid
+    square: false
+    columns: 2
+    cards:
+    - type: custom:mushroom-entity-card
+      entity: sensor.tz3000_dowj6gyi_ts0201_teplota
+      primary_info: state
+      secondary_info: name
+      name: Teplota
+      icon_color: red
+    - type: custom:mushroom-entity-card
+      entity: sensor.tz3000_dowj6gyi_ts0201_vlhkost
+      primary_info: state
+      secondary_info: name
+      name: Vlhkosť
+      icon_color: blue
+  - type: custom:mini-graph-card
+    entities:
+    - entity: sensor.tz3000_dowj6gyi_ts0201_vlhkost
+      name: Vlhkosť
+      color: var(--blue-color)
+      y_axis: secondary
+      show_line: false
+    - entity: sensor.tz3000_dowj6gyi_ts0201_teplota
+      name: Teplota
+    color_thresholds:
+    - value: 25
+      color: '#6e0000'
+    - value: 24
+      color: '#470101'
+    - value: 23
+      color: '#ff0000'
+    - value: 22
+      color: '#ffba00'
+    - value: 21
+      color: '#00aa99'
+    - value: 20
+      color: '#0090ff'
+    - value: 19
+      color: '#004e8b'
+    - value: 18
+      color: '#002542'
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 50
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+- type: media-control
+  entity: media_player.livingroom_tv
+- show_current: true
+  show_forecast: false
+  type: weather-forecast
+  entity: weather.forecast_domov
+  forecast_type: daily
+- type: thermostat
+  entity: climate.wonderwall_kupelna
+  features:
+  - type: climate-hvac-modes
+    hvac_modes:
+    - 'off'
+    - heat
+- type: vertical-stack
+  cards:
+  - type: custom:mushroom-template-card
+    primary: Pohyb v obývačke
+    secondary: "{% if is_state('binary_sensor.pohybovy_senzor_obyvacka_pohyb', 'on')  %}   \n  Pohyb práve teraz!   \n{% else\
+      \ %}   \n  Posledný pohyb: {{ relative_time(states.binary_sensor.pohybovy_senzor_obyvacka_pohyb.last_changed) }} dozadu\n\
+      {% endif %}   \n"
+    icon: "{% if is_state('binary_sensor.pohybovy_senzor_obyvacka_pohyb', 'on')  %}   \n  mdi:run-fast   \n{% else %}   \n\
+      \  mdi:walk   \n{% endif %}   \n"
+    icon_color: "{% if is_state('binary_sensor.pohybovy_senzor_obyvacka_pohyb', 'on')  %}   \n  amber   \n{% else %}   \n\
+      \  grey   \n{% endif %}   \n"
+    badge_icon: "{% if is_state('binary_sensor.pohybovy_senzor_obyvacka_pohyb', 'on')  %}   \n  mdi:motion-sensor   \n\n{%\
+      \ else %}   \n  mdi:sleep   \n{% endif %}   \n"
+    badge_color: "{% if is_state('binary_sensor.pohybovy_senzor_obyvacka_pohyb', 'on')  %}   \n  red   \n{% else %}   \n \
+      \ green   \n{% endif %}   \n"
+    layout: horizontal
+    tap_action:
+      action: more-info
+  - type: custom:apexcharts-card
+    graph_span: 24h
+    span:
+      start: day
+    header:
+      show: false
+    series:
+    - entity: binary_sensor.pohybovy_senzor_obyvacka_pohyb
+      type: column
+      name: Počet detekcií
+      transform: 'return x === ''on'' ? 1 : 0;'
+      group_by:
+        func: sum
+        duration: 20min
+      color_threshold:
+      - value: 0
+        color: '#3498db'
+      - value: 5
+        color: '#f39c12'
+      - value: 10
+        color: '#e74c3c'
+    apex_config:
+      chart:
+        height: 120px
+      plotOptions:
+        bar:
+          borderRadius: 4
+          distributed: true
+      xaxis:
+        labels:
+          format: HH:mm
+      yaxis:
+        show: false
+      grid:
+        yaxis:
+          lines:
+            show: false
+      tooltip:
+        x:
+          format: HH:mm
+        y:
+          formatter: "function(val) {   \n  return val + ' detekcií'   \n}   \n"
+        theme: dark
+      dataLabels:
+        enabled: true
+- type: vertical-stack
+  cards:
+  - type: custom:mushroom-template-card
+    primary: Pohyb v Kuchyni
+    secondary: "{% if is_state('binary_sensor.pohybovy_senzor_kuchyna_pohyb', 'on') %} \n  Pohyb práve teraz! \n{% else %}\
+      \ \n  Posledný pohyb: {{ relative_time(states.binary_sensor.pohybovy_senzor_kuchyna_pohyb.last_changed) }} dozadu\n\
+      {% endif %} \n"
+    icon: "{% if is_state('binary_sensor.pohybovy_senzor_kuchyna_pohyb', 'on') %} \n  mdi:run-fast \n{% else %} \n  mdi:walk\
+      \ \n{% endif %} \n"
+    icon_color: "{% if is_state('binary_sensor.pohybovy_senzor_kuchyna_pohyb', 'on') %} \n  amber \n{% else %} \n  grey \n\
+      {% endif %} \n"
+    badge_icon: "{% if is_state('binary_sensor.pohybovy_senzor_kuchyna_pohyb', 'on') %} \n  mdi:motion-sensor \n{% else %}\
+      \ \n  mdi:sleep \n{% endif %} \n"
+    badge_color: "{% if is_state('binary_sensor.pohybovy_senzor_kuchyna_pohyb', 'on') %} \n  red \n\n{% else %} \n  green\
+      \ \n{% endif %} \n"
+    layout: horizontal
+    tap_action:
+      action: more-info
+  - type: custom:apexcharts-card
+    graph_span: 24h
+    span:
+      start: day
+    header:
+      show: false
+    series:
+    - entity: binary_sensor.pohybovy_senzor_kuchyna_pohyb
+      type: column
+      name: Počet detekcií
+      transform: 'return x === ''on'' ? 1 : 0;'
+      group_by:
+        func: sum
+        duration: 20min
+      color_threshold:
+      - value: 0
+        color: '#3498db'
+      - value: 5
+        color: '#f39c12'
+      - value: 10
+        color: '#e74c3c'
+    apex_config:
+      chart:
+        height: 120px
+      plotOptions:
+        bar:
+          borderRadius: 4
+          distributed: true
+      xaxis:
+        labels:
+          format: HH:mm
+      yaxis:
+        show: false
+      grid:
+        yaxis:
+          lines:
+            show: false
+      tooltip:
+        x:
+          format: HH:mm
+        y:
+          formatter: "function(val) { \n  return val + ' detekcií' \n} \n"
+        theme: dark
+      dataLabels:
+        enabled: true
+- type: vertical-stack
+  cards:
+  - type: custom:mushroom-template-card
+    primary: Pohyb v spálni
+    secondary: "{% if is_state('binary_sensor.senzor_pohybu_pohyb', 'on') %} \n  Pohyb práve teraz! \n{% else %} \n  Posledný\
+      \ pohyb: {{ relative_time(states.binary_sensor.senzor_pohybu_pohyb.last_changed) }} dozadu\n{% endif %} \n"
+    icon: "{% if is_state('binary_sensor.senzor_pohybu_pohyb', 'on') %} \n  mdi:run-fast \n{% else %} \n  mdi:walk \n{% endif\
+      \ %} \n"
+    icon_color: "{% if is_state('binary_sensor.senzor_pohybu_pohyb', 'on') %} \n  amber \n{% else %} \n  grey \n{% endif %}\
+      \ \n"
+    badge_icon: "{% if is_state('binary_sensor.senzor_pohybu_pohyb', 'on') %} \n  mdi:motion-sensor \n{% else %} \n  mdi:sleep\
+      \ \n{% endif %} \n"
+    badge_color: "{% if is_state('binary_sensor.senzor_pohybu_pohyb', 'on') %} \n  red \n{% else %} \n  green \n{% endif %}\
+      \ \n"
+    layout: horizontal
+    tap_action:
+      action: more-info
+  - type: custom:apexcharts-card
+    graph_span: 24h
+    span:
+      start: day
+    header:
+      show: false
+    series:
+    - entity: binary_sensor.senzor_pohybu_pohyb
+      type: column
+      name: Počet detekcií
+      transform: 'return x === ''on'' ? 1 : 0;'
+      group_by:
+        func: sum
+        duration: 20min
+      color_threshold:
+      - value: 0
+        color: '#3498db'
+      - value: 5
+        color: '#f39c12'
+      - value: 10
+        color: '#e74c3c'
+    apex_config:
+      chart:
+        height: 120px
+      plotOptions:
+        bar:
+          borderRadius: 4
+          distributed: true
+      xaxis:
+        labels:
+          format: HH:mm
+      yaxis:
+        show: false
+      grid:
+        yaxis:
+          lines:
+            show: false
+      tooltip:
+        x:
+          format: HH:mm
+        y:
+          formatter: "function(val) { \n  return val + ' detekcií' \n} \n"
+        theme: dark
+      dataLabels:
+        enabled: true
+- type: entities
+  entities:
+  - device_tracker.ipad_morphy
+  - sensor.ipad_morphy_battery_level
+  - device_tracker.pixel_7
+  - sensor.pixel_7_battery_level
+- type: custom:vertical-stack-in-card
+  cards:
+  - type: custom:mushroom-title-card
+    title: Vonku
+  - type: grid
+    square: false
+    columns: 3
+    cards:
+    - type: custom:mushroom-entity-card
+      entity: sensor.lumi_weather_v1_ffa6_temperature
+      primary_info: state
+      secondary_info: name
+      name: Teplota
+      icon_color: red
+      card_mod:
+        style:
+          mushroom-state-info$: ".primary { \n  font-size: 17px !important; \n} \n"
+    - type: custom:mushroom-entity-card
+      entity: sensor.lumi_weather_v1_ffa6_relative_humidity
+      primary_info: state
+      secondary_info: name
+      name: Vlhkosť
+      icon_color: blue
+      card_mod:
+        style:
+          mushroom-state-info$: ".primary { \n  font-size: 17px !important; \n} \n"
+    - type: custom:mushroom-entity-card
+      entity: sensor.lumi_weather_v1_ffa6_atmospheric_pressure
+      primary_info: state
+      secondary_info: name
+      name: Tlak
+      icon_color: green
+      card_mod:
+        style:
+          mushroom-state-info$: ".primary { \n\n  font-size: 17px !important; \n} \n"
+  - type: custom:mini-graph-card
+    name: Teplota & Vlhkosť
+    entities:
+    - entity: sensor.lumi_weather_v1_ffa6_temperature
+      name: Teplota
+    - entity: sensor.lumi_weather_v1_ffa6_relative_humidity
+      name: Vlhkosť
+      color: var(--blue-color)
+      y_axis: secondary
+      show_line: false
+    color_thresholds:
+    - value: 35
+      color: '#6e0000'
+    - value: 30
+      color: '#470101'
+    - value: 25
+      color: '#ff0000'
+    - value: 20
+      color: '#ffba00'
+    - value: 15
+      color: '#00aa99'
+    - value: 10
+      color: '#0090ff'
+    - value: 5
+      color: '#004e8b'
+    - value: 0
+      color: '#002542'
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 50
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+  - type: custom:mini-graph-card
+    name: Tlak
+    entities:
+    - entity: sensor.lumi_weather_v1_ffa6_atmospheric_pressure
+      name: Tlak
+    hours_to_show: 24
+    points_per_hour: 6
+    line_width: 3
+    font_size: 55
+    smoothing: true
+    show:
+      name: false
+      icon: false
+      state: false
+      legend: false
+      fill: fade
+    color_thresholds:
+    - value: 1025
+      color: '#f39c12'
+    - value: 985
+      color: '#2ecc71'
+    - value: 975
+      color: '#3498db'
+- type: entities
+  entities:
+  - entity: input_boolean.povysavat
+  - entity: input_datetime.cas_vysavania
+- type: custom:mushroom-climate-card
+- type: entities
+  entities:
+  - entity: sensor.aqara_temp_humidity_sensor_teplota
+    name: Teplota
+  - entity: sensor.aqara_temp_humidity_sensor_vlhkost
+    name: Vlhkosť
+  title: Senzor_TH_Spálňa_M
+- type: entities
+  entities:
+  - entity: sensor.xiaomi_cpa4_ce8a_pm25_density
+    name: Environment PM2.5 Density
+  - entity: sensor.xiaomi_cpa4_ce8a_filter_left_time
+    name: Filter Filter LeR Time
+  - entity: sensor.xiaomi_cpa4_ce8a_filter_life_level
+    name: Filter Filter Life Level
+  - entity: sensor.xiaomi_cpa4_ce8a_filter_used_time
+    name: Filter Filter Used Time
+  title: Xiaomi Smart Air Purifier 4 Compact
+- type: grid
+  square: false
+  columns: 1
+  cards:
+  - type: entities
+    entities:
+    - entity: binary_sensor.camera_e1_b1a8_motion_sensor
+      name: Mo!on Sensor
+    title: Camera-E1-B1A8
+  - type: picture-entity
+    entity: camera.camera_e1_b1a8
+- type: vertical-stack
+  cards:
+  - type: conditional
+    conditions:
+    - entity: person.zuzka
+      state: home
+    card:
+      type: tile
+      entity: person.zuzka
+      name: Zuzka je na základni
+      color: green
+      icon: mdi:account-check
+  - type: conditional
+    conditions:
+    - entity: person.zuzka
+      state_not: home
+    card:
+      type: tile
+      entity: person.zuzka
+      name: Zuzka operuje v teréne
+      color: grey
+      icon: mdi:account-search
+- type: vertical-stack
+  cards:
+  - type: conditional
+    conditions:
+    - entity: person.zuzka
+      state: home
+    card:
+      type: tile
+      entity: person.zuzka
+      name: Zuzka je na základni
+      color: green
+      icon: mdi:account-check
+  - type: conditional
+    conditions:
+    - entity: person.zuzka
+      state_not: home
+    card:
+      type: tile
+      entity: person.zuzka
+      name: Zuzka operuje v teréne
+      color: grey
+      icon: mdi:account-search
+- type: thermostat
+  entity: climate.climate_spalna_better
+  features:
+  - type: climate-hvac-modes
+    hvac_modes:
+    - heat
+    - 'off'
+- type: thermostat
+  entity: climate.obyvacka_termostat_2
+  features:
+  - type: climate-hvac-modes
+    hvac_modes:
+    - heat
+    - 'off'
+  show_current_as_primary: false
+- type: horizontal-stack
+  cards:
+  - type: custom:stack-in-card
+    cards:
+    - type: custom:mushroom-template-card
+      entity: person.zuzka
+      primary: "{{ 'Doma' if is_state(entity, 'home') else 'V teréne' }} \n"
+      secondary: Zuzka
+      icon: mdi:account
+      icon_color: "{{ 'green' if is_state(entity, 'home') else 'orange' }} \n"
+      layout: vertical
+      card_mod:
+        style: "mushroom-shape-icon { \n  border: 3px solid {{ 'green' if is_state('person.zuzka', 'home') else 'orange' }};\
+          \ \n  border-radius: 50%; \n} \nha-card { border: none !important; } \n"
+    - type: custom:mushroom-chips-card
+      alignment: center
+      chips:
+      - type: template
+        entity: sensor.iphone_uzivatela_zuzka_battery_level
+        icon: "{% set bat = states(entity) | int(0) %} \n{% if bat > 80 %} mdi:battery \n{% elif bat > 50 %} mdi:battery-60\
+          \ \n{% elif bat > 20 %} mdi:battery-30 \n{% else %} mdi:battery-outline \n{% endif %} \n"
+        icon_color: "{{ 'red' if states(entity) | int(0) <= 20 else 'grey' }} \n"
+        content: '{{ states(entity) }}%'
+      - type: template
+        icon: mdi:map-marker
+        content: 0 km
+      - type: template
+        icon: mdi:clock-outline
+        content: "{{ relative_time(states.person.zuzka.last_changed) }} \n"
+      card_mod:
+        style: "ha-card { padding-bottom: 12px !important; } \n"
+  - type: custom:stack-in-card
+    cards:
+    - type: custom:mushroom-template-card
+      entity: person.mato
+      primary: "{{ 'Doma' if is_state(entity, 'home') else 'V teréne' }} \n"
+      secondary: Maťo
+      icon: mdi:account
+      icon_color: "{{ 'green' if is_state(entity, 'home') else 'orange' }} \n"
+      layout: vertical
+      card_mod:
+        style: "mushroom-shape-icon { \n  border: 3px solid {{ 'green' if is_state('person.mato', 'home') else 'orange' }};\
+          \ \n  border-radius: 50%; \n} \nha-card { border: none !important; } \n"
+    - type: custom:mushroom-chips-card
+      alignment: center
+      chips:
+      - type: template
+        entity: sensor.oneplus_15_battery_level
+        icon: "{% set bat = states(entity) | int(0) %} \n{% if bat > 80 %} mdi:battery \n{% elif bat > 50 %} mdi:battery-60\
+          \ \n{% elif bat > 20 %} mdi:battery-30 \n{% else %} mdi:battery-outline \n{% endif %} \n"
+        icon_color: "{{ 'red' if states(entity) | int(0) <= 20 else 'grey' }} \n"
+        content: '{{ states(entity) }}%'
+      - type: template
+        icon: mdi:map-marker
+        content: 8 km
+      - type: template
+        icon: mdi:clock-outline
+        content: "{{ relative_time(states.person.mato.last_changed) }} \n"
+      card_mod:
+        style: "ha-card { padding-bottom: 12px !important; } \n"
+- type: entities
+  entities:
+  - switch.quectel_matter_product
+  title: Zásuvka odvlhcovac
+- type: custom:purifier-card
+  entity: fan.xiaomi_cpa4_ce8a_air_purifier
+- type: vertical-stack
+  cards:
+  - type: tile
+    entity: fan.xiaomi_cpa4_ce8a_air_purifier
+    name: Čistička vzduchu
+    features:
+    - type: fan-speed
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+    - type: sensor
+      entity: sensor.xiaomi_cpa4_ce8a_pm25_density
+      name: PM2.5 Koncentrácia
+      graph: line
+      detail: 1
+    - type: entity
+      entity: sensor.xiaomi_cpa4_ce8a_pm25_density
+      name: Stav vzduchu
+      attribute: unit_of_measurement
+  - type: conditional
+    conditions:
+    - entity: sensor.xiaomi_cpa4_ce8a_pm25_density
+      state_not: '0'
+    card:
+      type: markdown
+      content: "{% set pm25 = states('sensor.xiaomi_cpa4_ce8a_pm25_density') | float  %} **Kvalita vzduchu:**  {% if pm25\
+        \ <= 12 %} \n  \U0001F7E2 Výborná \n{% elif pm25 <= 35 %} \n  \U0001F7E1 Dobrá \n\n{% elif pm25 <= 55 %} \n  \U0001F7E0\
+        \ Zhoršená \n{% else %} \n  \U0001F534 Nebezpečná \n{% endif %} \n"
+- type: thermostat
+  entity: climate.obyvacka_smart_termostat
+  features:
+  - type: climate-hvac-modes
+    hvac_modes:
+    - heat
+    - 'off'
+- type: thermostat
+  entity: climate.wonderwall_obyvacka
+  features:
+  - type: climate-hvac-modes
+    hvac_modes:
+    - 'off'
+    - heat
+- square: false
+  type: grid
+  title: Obývačka svetlá
+  cards:
+  - type: custom:slider-button-card
+    entity: light.obyvacka_luster_telka_skupina
+    name: Telka
+    icon:
+      show: true
+      use_state_color: false
+      size: 28px
+      icon: mdi:lightbulb-group
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    action_button:
+      mode: toggle
+      show: true
+      icon: mdi:power
+    styles:
+      card:
+        width: 85px
+        height: 85px
+        border-radius: 20px
+        background-color: '#1e1e1e'
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        cursor: pointer
+        box-shadow: 0px 4px 15px 0px rgba(0,0,0,0.3)
+        border: 1px solid rgba(255, 255, 255, 0.05)
+      icon:
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        align-self: center
+        filter: drop-shadow(0px 0px 6px rgba(0,0,0,0))
+      name:
+        font-size: 13px
+        font-weight: 500
+        color: rgba(255, 255, 255, 0.8)
+        justify-self: center
+        align-self: end
+        padding-bottom: 8px
+        text-shadow: 0px 1px 3px rgba(0,0,0,0.3)
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    double_tap_action:
+      action: call-service
+      service: light.turn_on
+      service_data:
+        entity_id: light.obyvacka_luster_telka_skupina
+        brightness_pct: 100
+    template: "[[[ \n  let iconColor = (entity.state === 'on') ? 'rgba(255, 220, 100, 1)' : 'rgba(255, 255, 255, 0.3)';\n\
+      \  let shadowColor = 'rgba(0,0,0,0)'; \n  let iconShadow = 'drop-shadow(0px 0px 0px rgba(0,0,0,0))'; \n\n  if (entity.state\
+      \ === 'on') { \n    if (entity.attributes.rgb_color) { \n      let rgb = entity.attributes.rgb_color; \n      shadowColor\
+      \ = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.6)`; \n      iconColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`; \n   \
+      \   iconShadow = `drop-shadow(0px 0px 8px rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.8))`; \n    } else { \n      shadowColor\
+      \ = 'rgba(253, 216, 53, 0.6)'; \n      iconShadow = 'drop-shadow(0px 0px 8px rgba(253, 216, 53, 0.6))'; \n    } \n \
+      \ } \n\n  let brightness = entity.attributes.brightness || 0; \n\n   \n   \n  let bgOpacity = entity.state === 'on'\
+      \ ? 0.08 + (brightness / 255) * 0.12 : 0; \n\n  return { \n    card: { \n      '--ha-card-box-shadow': `0px 6px 25px\
+      \ 0px ${shadowColor}, inset 0px 0px 30px 0px ${shadowColor.replace(/[^,]+(?=\\))/, bgOpacity)}`,\n      'background-color':\
+      \ (entity.state === 'on') ? '#2a2a2a' : '#1e1e1e', \n      'border-color': (entity.state === 'on') ? shadowColor.replace(/[\\\
+      d.]+\\)$/g, '0.2)') : 'rgba(255, 255, 255, 0.05)',\n      'transform': (entity.state === 'on') ? 'translateY(-2px)'\
+      \ : 'translateY(0px)' \n    }, \n    icon: { \n      color: iconColor, \n      filter: iconShadow \n    } \n  }; \n\
+      ]]] \n"
+  - type: custom:slider-button-card
+    entity: light.lampa
+    name: Lampa
+    icon:
+      show: true
+      use_state_color: false
+      size: 28px
+      icon: mdi:desk-lamp
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    action_button:
+      mode: toggle
+      show: true
+      icon: mdi:power
+    styles:
+      card:
+        width: 85px
+        height: 85px
+        border-radius: 20px
+        background-color: '#1e1e1e'
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        cursor: pointer
+        box-shadow: 0px 4px 15px 0px rgba(0,0,0,0.3)
+        border: 1px solid rgba(255, 255, 255, 0.05)
+      icon:
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        align-self: center
+        filter: drop-shadow(0px 0px 6px rgba(0,0,0,0))
+      name:
+        font-size: 13px
+        font-weight: 500
+        color: rgba(255, 255, 255, 0.8)
+        justify-self: center
+        align-self: end
+        padding-bottom: 8px
+        text-shadow: 0px 1px 3px rgba(0,0,0,0.3)
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    double_tap_action:
+      action: call-service
+      service: light.turn_on
+      service_data:
+        entity_id: light.lampa
+        brightness_pct: 100
+    template: "[[[ \n  let iconColor = (entity.state === 'on') ? 'rgba(255, 220, 100, 1)' : 'rgba(255, 255, 255, 0.3)';\n\
+      \  let shadowColor = 'rgba(0,0,0,0)'; \n  let iconShadow = 'drop-shadow(0px 0px 0px rgba(0,0,0,0))'; \n\n  if (entity.state\
+      \ === 'on') { \n    if (entity.attributes.rgb_color) { \n      let rgb = entity.attributes.rgb_color; \n      shadowColor\
+      \ = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.6)`; \n      iconColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`; \n   \
+      \   iconShadow = `drop-shadow(0px 0px 8px rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.8))`; \n    } else { \n      shadowColor\
+      \ = 'rgba(253, 216, 53, 0.6)'; \n      iconShadow = 'drop-shadow(0px 0px 8px rgba(253, 216, 53, 0.6))'; \n    } \n \
+      \ } \n\n  let brightness = entity.attributes.brightness || 0; \n  let bgOpacity = entity.state === 'on' ? 0.08 + (brightness\
+      \ / 255) * 0.12 : 0; \n\n  return { \n    card: { \n      '--ha-card-box-shadow': `0px 6px 25px 0px ${shadowColor},\
+      \ inset 0px 0px 30px 0px ${shadowColor.replace(/[^,]+(?=\\))/, bgOpacity)}`,\n\n   \n   \n   \n      'background-color':\
+      \ (entity.state === 'on') ? '#2a2a2a' : '#1e1e1e', \n      'border-color': (entity.state === 'on') ? shadowColor.replace(/[\\\
+      d.]+\\)$/g, '0.2)') : 'rgba(255, 255, 255, 0.05)',\n      'transform': (entity.state === 'on') ? 'translateY(-2px)'\
+      \ : 'translateY(0px)' \n    }, \n    icon: { \n      color: iconColor, \n      filter: iconShadow \n    } \n  }; \n\
+      ]]] \n"
+  - type: custom:slider-button-card
+    entity: light.obyvacka_luster_gauc_skupina
+    name: Gauč
+    icon:
+      show: true
+      use_state_color: false
+      size: 28px
+      icon: mdi:lightbulb-group
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    action_button:
+      mode: toggle
+      show: true
+      icon: mdi:power
+    styles:
+      card:
+        width: 85px
+        height: 85px
+        border-radius: 20px
+        background-color: '#1e1e1e'
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        cursor: pointer
+        box-shadow: 0px 4px 15px 0px rgba(0,0,0,0.3)
+        border: 1px solid rgba(255, 255, 255, 0.05)
+      icon:
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        align-self: center
+        filter: drop-shadow(0px 0px 6px rgba(0,0,0,0))
+      name:
+        font-size: 13px
+        font-weight: 500
+        color: rgba(255, 255, 255, 0.8)
+        justify-self: center
+        align-self: end
+        padding-bottom: 8px
+        text-shadow: 0px 1px 3px rgba(0,0,0,0.3)
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    double_tap_action:
+      action: call-service
+      service: light.turn_on
+      service_data:
+        entity_id: light.obyvacka_luster_gauc_skupina
+        brightness_pct: 100
+    template: "[[[ \n  let iconColor = (entity.state === 'on') ? 'rgba(255, 220, 100, 1)' : 'rgba(255, 255, 255, 0.3)';\n\
+      \  let shadowColor = 'rgba(0,0,0,0)'; \n  let iconShadow = 'drop-shadow(0px 0px 0px rgba(0,0,0,0))'; \n\n  if (entity.state\
+      \ === 'on') { \n    if (entity.attributes.rgb_color) { \n      let rgb = entity.attributes.rgb_color; \n      shadowColor\
+      \ = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.6)`; \n      iconColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`; \n   \
+      \   iconShadow = `drop-shadow(0px 0px 8px rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.8))`; \n    } else { \n      shadowColor\
+      \ = 'rgba(253, 216, 53, 0.6)'; \n      iconShadow = 'drop-shadow(0px 0px 8px rgba(253, 216, 53, 0.6))'; \n    } \n \
+      \ } \n\n  let brightness = entity.attributes.brightness || 0; \n  let bgOpacity = entity.state === 'on' ? 0.08 + (brightness\
+      \ / 255) * 0.12 : 0; \n\n  return { \n    card: { \n      '--ha-card-box-shadow': `0px 6px 25px 0px ${shadowColor},\
+      \ inset 0px 0px 30px 0px ${shadowColor.replace(/[^,]+(?=\\))/, bgOpacity)}`,\n      'background-color': (entity.state\
+      \ === 'on') ? '#2a2a2a' : '#1e1e1e', \n      'border-color': (entity.state === 'on') ? shadowColor.replace(/[\\d.]+(?=\\\
+      ))/, '0.2)') : 'rgba(255, 255, 255, 0.05)',\n      'transform': (entity.state === 'on') ? 'translateY(-2px)' : 'translateY(0px)'\
+      \ \n    }, \n    icon: { \n\n   \n   \n   \n      color: iconColor, \n      filter: iconShadow \n    } \n  }; \n]]]\
+      \ \n"
+  columns: 3
+- square: false
+  type: grid
+  title: Obývačka svetlá
+  cards:
+  - type: custom:slider-button-card
+    entity: light.obyvacka_luster_telka_skupina
+    name: Telka
+    icon:
+      show: true
+      use_state_color: false
+      size: 32px
+      icon: mdi:lightbulb-group
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    action_button:
+      mode: toggle
+      show: false
+    styles:
+      card:
+        width: 95px
+        height: 110px
+        border-radius: 25px
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #252525 100%)'
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+        cursor: pointer
+        box-shadow: '0px 8px 24px rgba(0,0,0,0.4), inset 0px 1px 0px  rgba(255,255,255,0.03) '
+        border: 1.5px solid rgba(255, 255, 255, 0.06)
+        position: relative
+        overflow: hidden
+      icon:
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+        align-self: center
+        margin-top: 12px
+        filter: drop-shadow(0px 0px 0px rgba(0,0,0,0))
+      name:
+        font-size: 14px
+        font-weight: 600
+        letter-spacing: 0.3px
+        color: rgba(255, 255, 255, 0.85)
+        justify-self: center
+        align-self: end
+        padding-bottom: 12px
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.4)
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    double_tap_action:
+      action: call-service
+      service: light.turn_on
+      service_data:
+        entity_id: light.obyvacka_luster_telka_skupina
+        brightness_pct: 100
+    template: "[[[ \n  const isOn = entity.state === 'on'; \n  const brightness = entity.attributes.brightness || 0; \n  const\
+      \ brightnessPercent = Math.round((brightness / 255) * 100); \n\n  let baseColor = [253, 216, 53]; // Teplá žltá \n \
+      \ let iconColor = isOn ? `rgb(255, 230, 120)` : 'rgba(255, 255, 255, 0.25)'; \n  let glowColor = `rgba(253, 216, 53,\
+      \ ${isOn ? 0.7 : 0})`; \n  let iconShadow = `drop-shadow(0px 0px 0px rgba(0,0,0,0))`; \n\n  if (isOn && entity.attributes.rgb_color)\
+      \ { \n    baseColor = entity.attributes.rgb_color; \n    iconColor = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;\
+      \ \n    glowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.7)`; \n  } \n\n  if (isOn) { \n    iconShadow\
+      \ = `drop-shadow(0px 0px 12px ${glowColor}) drop-shadow(0px 0px 6px ${glowColor})`;\n  } \n\n  const glowIntensity =\
+      \ isOn ? (brightness / 255) * 0.85 + 0.15 : 0; \n  const outerGlow = `0px 12px 35px rgba(${baseColor[0]}, ${baseColor[1]},\
+      \ ${baseColor[2]}, ${glowIntensity * 0.6})`;\n  const innerGlow = `inset 0px 0px 40px rgba(${baseColor[0]}, ${baseColor[1]},\
+      \ ${baseColor[2]}, ${glowIntensity * 0.15})`;\n  const topHighlight = `inset 0px 1px 0px rgba(255,255,255,${isOn ? 0.08\
+      \ : 0.03})`; \n\n   \n   \n   \n   \n  const bgGradient = isOn  \n    ? `linear-gradient(135deg, #2a2a2a 0%, #353535\
+      \ 100%)` \n    : `linear-gradient(135deg, #1a1a1a 0%, #252525 100%)`; \n\n  const borderColor = isOn  \n    ? `rgba(${baseColor[0]},\
+      \ ${baseColor[1]}, ${baseColor[2]}, 0.35)` \n    : 'rgba(255, 255, 255, 0.06)'; \n\n  return { \n    card: { \n    \
+      \  'box-shadow': `${outerGlow}, ${innerGlow}, ${topHighlight}, 0px 8px 24px rgba(0,0,0,0.4)`,\n      'background': bgGradient,\
+      \ \n      'border-color': borderColor, \n      'transform': isOn ? 'translateY(-3px) scale(1.02)' : 'translateY(0px)\
+      \ scale(1)' \n    }, \n    icon: { \n      color: iconColor, \n      filter: iconShadow, \n      transform: isOn ? 'scale(1.1)\
+      \ rotate(5deg)' : 'scale(1) rotate(0deg)' \n    }, \n    name: { \n      color: isOn ? 'rgba(255, 255, 255, 0.95)' :\
+      \ 'rgba(255, 255, 255, 0.7)' \n    } \n  }; \n]]] \n"
+  - type: custom:slider-button-card
+    entity: light.lampa
+    name: Lampa
+    icon:
+      show: true
+      use_state_color: false
+      size: 32px
+      icon: mdi:desk-lamp
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    action_button:
+      mode: toggle
+      show: false
+    styles:
+      card:
+        width: 95px
+        height: 110px
+        border-radius: 25px
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #252525 100%)'
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+        cursor: pointer
+        box-shadow: '0px 8px 24px rgba(0,0,0,0.4), inset 0px 1px 0px  rgba(255,255,255,0.03) '
+        border: 1.5px solid rgba(255, 255, 255, 0.06)
+        position: relative
+        overflow: hidden
+      icon:
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+        align-self: center
+        margin-top: 12px
+        filter: drop-shadow(0px 0px 0px rgba(0,0,0,0))
+      name:
+        font-size: 14px
+        font-weight: 600
+        letter-spacing: 0.3px
+        color: rgba(255, 255, 255, 0.85)
+        justify-self: center
+        align-self: end
+        padding-bottom: 12px
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.4)
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    double_tap_action:
+      action: call-service
+      service: light.turn_on
+      service_data:
+        entity_id: light.lampa
+        brightness_pct: 100
+    template: "[[[ \n  const isOn = entity.state === 'on'; \n  const brightness = entity.attributes.brightness || 0; \n  const\
+      \ brightnessPercent = Math.round((brightness / 255) * 100); \n\n  let baseColor = [253, 216, 53]; // Teplá žltá \n \
+      \ let iconColor = isOn ? `rgb(255, 230, 120)` : 'rgba(255, 255, 255, 0.25)'; \n  let glowColor = `rgba(253, 216, 53,\
+      \ ${isOn ? 0.7 : 0})`; \n  let iconShadow = `drop-shadow(0px 0px 0px rgba(0,0,0,0))`; \n\n   \n   \n  if (isOn && entity.attributes.rgb_color)\
+      \ { \n    baseColor = entity.attributes.rgb_color; \n    iconColor = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;\
+      \ \n    glowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.7)`; \n  } \n\n  if (isOn) { \n    iconShadow\
+      \ = `drop-shadow(0px 0px 12px ${glowColor}) drop-shadow(0px 0px 6px ${glowColor})`;\n  } \n\n  const glowIntensity =\
+      \ isOn ? (brightness / 255) * 0.85 + 0.15 : 0; \n  const outerGlow = `0px 12px 35px rgba(${baseColor[0]}, ${baseColor[1]},\
+      \ ${baseColor[2]}, ${glowIntensity * 0.6})`;\n  const innerGlow = `inset 0px 0px 40px rgba(${baseColor[0]}, ${baseColor[1]},\
+      \ ${baseColor[2]}, ${glowIntensity * 0.15})`;\n  const topHighlight = `inset 0px 1px 0px rgba(255,255,255,${isOn ? 0.08\
+      \ : 0.03})`; \n\n  const bgGradient = isOn  \n    ? `linear-gradient(135deg, #2a2a2a 0%, #353535 100%)` \n    : `linear-gradient(135deg,\
+      \ #1a1a1a 0%, #252525 100%)`; \n\n  const borderColor = isOn  \n    ? `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]},\
+      \ 0.35)` \n    : 'rgba(255, 255, 255, 0.06)'; \n\n  return { \n    card: { \n      'box-shadow': `${outerGlow}, ${innerGlow},\
+      \ ${topHighlight}, 0px 8px 24px rgba(0,0,0,0.4)`,\n      'background': bgGradient, \n      'border-color': borderColor,\
+      \ \n      'transform': isOn ? 'translateY(-3px) scale(1.02)' : 'translateY(0px) scale(1)' \n    }, \n    icon: { \n\
+      \      color: iconColor, \n      filter: iconShadow, \n      transform: isOn ? 'scale(1.1) rotate(5deg)' : 'scale(1)\
+      \ rotate(0deg)' \n    }, \n    name: { \n      color: isOn ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.7)'\
+      \ \n    } \n  }; \n]]] \n"
+  - type: custom:slider-button-card
+    entity: light.obyvacka_luster_gauc_skupina
+    name: Gauč
+    icon:
+      show: true
+      use_state_color: false
+      size: 32px
+      icon: mdi:lightbulb-group
+    slider:
+      background: gradient
+      direction: left-right
+      min: 0
+      max: 100
+      step: 1
+      value_attribute: brightness_pct
+    action_button:
+      mode: toggle
+      show: false
+    styles:
+      card:
+        width: 95px
+        height: 110px
+        border-radius: 25px
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #252525 100%)'
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+        cursor: pointer
+        box-shadow: '0px 8px 24px rgba(0,0,0,0.4), inset 0px 1px 0px  rgba(255,255,255,0.03) '
+        border: 1.5px solid rgba(255, 255, 255, 0.06)
+        position: relative
+        overflow: hidden
+      icon:
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
+        align-self: center
+        margin-top: 12px
+        filter: drop-shadow(0px 0px 0px rgba(0,0,0,0))
+      name:
+        font-size: 14px
+        font-weight: 600
+        letter-spacing: 0.3px
+        color: rgba(255, 255, 255, 0.85)
+        justify-self: center
+        align-self: end
+        padding-bottom: 12px
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.4)
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+    double_tap_action:
+      action: call-service
+      service: light.turn_on
+      service_data:
+        entity_id: light.obyvacka_luster_gauc_skupina
+        brightness_pct: 100
+    template: "[[[ \n  const isOn = entity.state === 'on'; \n  const brightness = entity.attributes.brightness || 0; \n  const\
+      \ brightnessPercent = Math.round((brightness / 255) * 100); \n\n  let baseColor = [253, 216, 53]; // Teplá žltá \n \
+      \ let iconColor = isOn ? `rgb(255, 230, 120)` : 'rgba(255, 255, 255, 0.25)'; \n  let glowColor = `rgba(253, 216, 53,\
+      \ ${isOn ? 0.7 : 0})`; \n  let iconShadow = `drop-shadow(0px 0px 0px rgba(0,0,0,0))`; \n\n  if (isOn && entity.attributes.rgb_color)\
+      \ { \n    baseColor = entity.attributes.rgb_color; \n    iconColor = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;\
+      \ \n    glowColor = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, 0.7)`; \n  } \n\n  if (isOn) { \n    iconShadow\
+      \ = `drop-shadow(0px 0px 12px ${glowColor}) drop-shadow(0px 0px 6px ${glowColor})`;\n  } \n\n  const glowIntensity =\
+      \ isOn ? (brightness / 255) * 0.85 + 0.15 : 0; \n  const outerGlow = `0px 12px 35px rgba(${baseColor[0]}, ${baseColor[1]},\
+      \ ${baseColor[2]}, ${glowIntensity * 0.6})`;\n  const innerGlow = `inset 0px 0px 40px rgba(${baseColor[0]}, ${baseColor[1]},\
+      \ ${baseColor[2]}, ${glowIntensity * 0.15})`;\n  const topHighlight = `inset 0px 1px 0px rgba(255,255,255,${isOn ? 0.08\
+      \ : 0.03})`; \n\n  const bgGradient = isOn  \n    ? `linear-gradient(135deg, #2a2a2a 0%, #353535 100%)` \n    : `linear-gradient(135deg,\
+      \ #1a1a1a 0%, #252525 100%)`; \n\n  const borderColor = isOn  \n    ? `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]},\
+      \ 0.35)` \n    : 'rgba(255, 255, 255, 0.06)'; \n\n  return { \n    card: { \n      'box-shadow': `${outerGlow}, ${innerGlow},\
+      \ ${topHighlight}, 0px 8px 24px rgba(0,0,0,0.4)`,\n\n   \n   \n   \n   \n   \n   \n   \n      'background': bgGradient,\
+      \ \n      'border-color': borderColor, \n      'transform': isOn ? 'translateY(-3px) scale(1.02)' : 'translateY(0px)\
+      \ scale(1)' \n    }, \n    icon: { \n      color: iconColor, \n      filter: iconShadow, \n      transform: isOn ? 'scale(1.1)\
+      \ rotate(5deg)' : 'scale(1) rotate(0deg)' \n    }, \n    name: { \n      color: isOn ? 'rgba(255, 255, 255, 0.95)' :\
+      \ 'rgba(255, 255, 255, 0.7)' \n    } \n  }; \n]]] \n"
+  columns: 3
+type: masonry
+theme: minimalist-mobile-tapbar
