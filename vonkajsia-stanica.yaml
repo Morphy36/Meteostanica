@@ -1,7 +1,7 @@
 substitutions:
   dev_name: "vonkajsia-stanica"
   friendly_name: "Meteostanica 1"
-  altitude_meters: "250"
+  altitude_meters: "430"
   batt_multiplier: "2.0"
   batt_min_voltage: "3.0"
   batt_max_voltage: "4.2"
@@ -621,8 +621,11 @@ binary_sensor:
         hum_rising = (hum - id(prev_humidity)) > 2.0f;
       id(prev_humidity) = hum;
       float trend = id(pressure_trend_value);
+      // Použij MSL tlak (normalizovaný na hladinu mora) — absolútny tlak pri 430m
+      // je vždy ~965 hPa, čo by falošne triggerovalo podmienku s hranicou 1000 hPa
+      float msl = id(msl_pressure).has_state() ? id(msl_pressure).state : (cur_p + 50.0f);
       if (trend < -1.5f && cur_p < avg && hum_rising) return true;
-      if (cur_p < 1000.0f && hum > id(humidity_threshold)) return true;
+      if (msl < 1010.0f && hum > id(humidity_threshold)) return true;
       if (trend < ${storm_pressure_drop}) return true;
       return false;
   - platform: template
