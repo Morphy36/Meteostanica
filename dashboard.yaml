@@ -1,0 +1,327 @@
+title: Meteostanica
+views:
+  - type: sections
+    title: Vonkajšia stanica
+    path: meteostanica
+    icon: mdi:weather-partly-cloudy
+    max_columns: 3
+    sections:
+
+      # ── PREDPOVEĎ ──────────────────────────────────────────────────────────
+      - title: ""
+        cards:
+          - type: markdown
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 100%);
+                  color: white;
+                  border-radius: 16px;
+                  padding: 8px;
+                }
+            content: >
+              ## {{ states('sensor.vonkajsia_stanica_predpoved_pocasia') }}
+
+              {{ states('sensor.vonkajsia_stanica_odporucanie_oblecenia') }}
+
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_status_stanice
+                name: Status
+              - type: tile
+                entity: sensor.vonkajsia_stanica_rezim_stanice
+                name: Režim
+                icon: mdi:sleep
+
+      # ── TEPLOTA & VLHKOSŤ ──────────────────────────────────────────────────
+      - title: Teplota & Vlhkosť
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.vonkajsia_stanica_vonkajsia_teplota
+                name: Teplota
+                color: orange
+              - type: tile
+                entity: sensor.vonkajsia_stanica_pocitova_teplota
+                name: Pocitová
+                color: deep-orange
+              - type: tile
+                entity: sensor.vonkajsia_stanica_rosny_bod
+                name: Rosný bod
+                color: cyan
+
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.vonkajsia_stanica_vonkajsia_teplota
+                name: Teplota (°C)
+                min: -20
+                max: 45
+                needle: true
+                severity:
+                  green: 10
+                  yellow: 28
+                  red: 36
+
+              - type: gauge
+                entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
+                name: Vlhkosť (%)
+                min: 0
+                max: 100
+                needle: true
+                severity:
+                  green: 40
+                  yellow: 70
+                  red: 85
+
+          - type: history-graph
+            title: Teplota — posledných 24h
+            hours_to_show: 24
+            logarithmic_scale: false
+            entities:
+              - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
+                name: Teplota
+              - entity: sensor.vonkajsia_stanica_pocitova_teplota
+                name: Pocitová
+              - entity: sensor.vonkajsia_stanica_rosny_bod
+                name: Rosný bod
+
+      # ── TLAK ───────────────────────────────────────────────────────────────
+      - title: Atmosferický tlak
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.vonkajsia_stanica_tlak_hladina_mora
+                name: Tlak (MSL)
+                color: purple
+              - type: tile
+                entity: sensor.vonkajsia_stanica_tlakovy_trend
+                name: Trend (hPa/h)
+                color: purple
+                icon: mdi:trending-down
+
+          - type: gauge
+            entity: sensor.vonkajsia_stanica_tlak_hladina_mora
+            name: Tlak na hladine mora
+            min: 970
+            max: 1040
+            needle: true
+            severity:
+              green: 1013
+              yellow: 1000
+              red: 990
+
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_predikcia_dazda_tlak
+                name: Predikcia dažďa
+                color: blue
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_vystraha_burka
+                name: Búrka
+                color: red
+
+          - type: history-graph
+            title: Tlak — posledných 48h
+            hours_to_show: 48
+            entities:
+              - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
+                name: MSL tlak
+
+      # ── VIETOR ─────────────────────────────────────────────────────────────
+      - title: Vietor
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
+                name: Priemer
+                color: teal
+                icon: mdi:weather-windy
+              - type: tile
+                entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
+                name: Nárazy
+                color: cyan
+                icon: mdi:weather-windy-variant
+
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.vonkajsia_stanica_smer_vetra_text
+                name: Smer
+                icon: mdi:compass
+                color: teal
+              - type: tile
+                entity: sensor.vonkajsia_stanica_sila_vetra_beaufort
+                name: Beaufort
+                icon: mdi:flag
+                color: teal
+
+          - type: gauge
+            entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
+            name: Rýchlosť vetra (km/h)
+            min: 0
+            max: 80
+            needle: true
+            severity:
+              green: 0
+              yellow: 20
+              red: 40
+
+          - type: history-graph
+            title: Vietor — posledných 6h
+            hours_to_show: 6
+            entities:
+              - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
+                name: Priemer
+              - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
+                name: Nárazy
+
+      # ── ZRÁŽKY ─────────────────────────────────────────────────────────────
+      - title: Zrážky
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_detekcia_dazda
+                name: Detekcia
+                color: blue
+                icon: mdi:weather-rainy
+              - type: tile
+                entity: sensor.vonkajsia_stanica_intenzita_zrazok
+                name: Intenzita
+                color: blue
+              - type: tile
+                entity: sensor.vonkajsia_stanica_celkove_zrazky
+                name: Celkovo
+                color: indigo
+
+          - type: entities
+            title: Detail zrážok
+            entities:
+              - entity: sensor.vonkajsia_stanica_intenzita_zrazok_text
+                name: Intenzita (text)
+                icon: mdi:weather-pouring
+              - entity: sensor.vonkajsia_stanica_vlhkost_dazdoveho_senzora
+                name: Vlhkosť senzora
+                icon: mdi:water-percent
+              - entity: sensor.vonkajsia_stanica_celkove_zrazky
+                name: Celkové zrážky dnes
+                icon: mdi:weather-rainy
+
+      # ── SVETLO & UV ────────────────────────────────────────────────────────
+      - title: Svetlo & UV
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.vonkajsia_stanica_intenzita_svetla
+                name: Osvetlenie
+                color: yellow
+                icon: mdi:white-balance-sunny
+              - type: tile
+                entity: sensor.vonkajsia_stanica_uv_index
+                name: UV Index
+                color: amber
+                icon: mdi:sun-wireless
+
+          - type: gauge
+            entity: sensor.vonkajsia_stanica_uv_index
+            name: UV Index
+            min: 0
+            max: 11
+            needle: true
+            severity:
+              green: 3
+              yellow: 6
+              red: 8
+
+          - type: history-graph
+            title: Svetlo — posledných 12h
+            hours_to_show: 12
+            entities:
+              - entity: sensor.vonkajsia_stanica_intenzita_svetla
+                name: Lux
+              - entity: sensor.vonkajsia_stanica_uv_index
+                name: UV Index
+
+      # ── UPOZORNENIA ────────────────────────────────────────────────────────
+      - title: Upozornenia
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_riziko_mrazu
+                name: Riziko mrazu
+                color: light-blue
+                icon: mdi:snowflake-alert
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_vystraha_burka
+                name: Búrka
+                color: red
+                icon: mdi:weather-lightning-rainy
+              - type: tile
+                entity: binary_sensor.vonkajsia_stanica_predikcia_dazda_tlak
+                name: Dážď
+                color: blue
+                icon: mdi:weather-rainy
+
+      # ── BATÉRIA & DIAGNOSTIKA ──────────────────────────────────────────────
+      - title: Batéria & Diagnostika
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: tile
+                entity: sensor.vonkajsia_stanica_uroven_baterie
+                name: Batéria
+                color: green
+                icon: mdi:battery
+              - type: tile
+                entity: sensor.vonkajsia_stanica_napatie_baterie
+                name: Napätie
+                color: green
+                icon: mdi:battery-charging
+
+          - type: gauge
+            entity: sensor.vonkajsia_stanica_uroven_baterie
+            name: Stav batérie (%)
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              green: 50
+              yellow: 20
+              red: 10
+
+          - type: entities
+            title: Systém
+            entities:
+              - entity: sensor.vonkajsia_stanica_wifi_signal_dbm
+                name: WiFi Signál
+                icon: mdi:wifi
+              - entity: sensor.vonkajsia_stanica_kvalita_wifi
+                name: Kvalita WiFi
+                icon: mdi:wifi-strength-3
+              - entity: sensor.vonkajsia_stanica_cas_behu
+                name: Čas behu
+                icon: mdi:timer
+              - entity: sensor.vonkajsia_stanica_pocet_bootov
+                name: Počet bootov
+                icon: mdi:restart
+              - entity: sensor.vonkajsia_stanica_teplota_cpu
+                name: Teplota CPU
+                icon: mdi:chip
+              - entity: binary_sensor.vonkajsia_stanica_chyba_i2c_senzorov
+                name: Chyba I2C
+                icon: mdi:alert-circle
+
+          - type: history-graph
+            title: Batéria — posledných 7 dní
+            hours_to_show: 168
+            entities:
+              - entity: sensor.vonkajsia_stanica_uroven_baterie
+                name: Batéria %
