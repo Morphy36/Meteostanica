@@ -1,226 +1,199 @@
 title: Meteostanica
 views:
-  - title: Vonkajšia stanica
+  - title: Vonkajsia stanica
     path: meteostanica
     icon: mdi:weather-partly-cloudy
     cards:
 
-      # ── PREDPOVEĎ ──────────────────────────────────────────────────────────
-      - type: vertical-stack
-        cards:
-          - type: markdown
-            content: >
-              ## {{ states('sensor.vonkajsia_stanica_predpoved_pocasia') }}
+      - type: markdown
+        content: |
+          ## {{ states('sensor.vonkajsia_stanica_predpoved_pocasia') }}
+          {{ states('sensor.vonkajsia_stanica_odporucanie_oblecenia') }}
 
-              {{ states('sensor.vonkajsia_stanica_odporucanie_oblecenia') }}
+      - type: glance
+        title: Prehľad
+        show_name: true
+        show_icon: true
+        entities:
+          - entity: binary_sensor.vonkajsia_stanica_status_stanice
+            name: Status
+          - entity: sensor.vonkajsia_stanica_uroven_baterie
+            name: Bateria
+            icon: mdi:battery
+          - entity: sensor.vonkajsia_stanica_rezim_stanice
+            name: Rezim
+            icon: mdi:sleep
 
-          - type: glance
-            show_name: true
-            show_icon: true
-            entities:
-              - entity: binary_sensor.vonkajsia_stanica_status_stanice
-                name: Status
-              - entity: sensor.vonkajsia_stanica_rezim_stanice
-                name: Režim
-                icon: mdi:sleep
-              - entity: sensor.vonkajsia_stanica_uroven_baterie
-                name: Batéria
-                icon: mdi:battery
-
-      # ── TEPLOTA & VLHKOSŤ ──────────────────────────────────────────────────
-      - type: vertical-stack
-        cards:
-          - type: entities
-            title: Teplota & Vlhkosť
-            icon: mdi:thermometer
-            entities:
-              - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-                name: Teplota
-                icon: mdi:thermometer
-              - entity: sensor.vonkajsia_stanica_pocitova_teplota
-                name: Pocitová teplota
-                icon: mdi:thermometer-lines
-              - entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
-                name: Vlhkosť
-                icon: mdi:water-percent
-              - entity: sensor.vonkajsia_stanica_rosny_bod
-                name: Rosný bod
-                icon: mdi:thermometer-water
-              - entity: sensor.vonkajsia_stanica_absolutna_vlhkost
-                name: Absolútna vlhkosť
-                icon: mdi:water
-
-          - type: glance
-            show_name: true
-            show_icon: false
-            entities:
-              - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-                name: "°C"
-              - entity: sensor.vonkajsia_stanica_pocitova_teplota
-                name: Pocitová
-              - entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
-                name: Vlhkosť
-
-          - type: gauge
-            entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-            name: Teplota
-            min: -20
-            max: 45
-            needle: true
-            severity:
-              green: 10
-              yellow: 28
-              red: 36
-
-          - type: history-graph
-            title: Teplota — 24h
-            hours_to_show: 24
-            entities:
-              - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-                name: Teplota
-              - entity: sensor.vonkajsia_stanica_pocitova_teplota
-                name: Pocitová
-              - entity: sensor.vonkajsia_stanica_rosny_bod
-                name: Rosný bod
-
-      # ── ATMOSFERICKÝ TLAK ──────────────────────────────────────────────────
-      - type: vertical-stack
-        cards:
-          - type: entities
-            title: Atmosferický tlak
-            icon: mdi:gauge
-            entities:
-              - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
-                name: Tlak (hladina mora)
-                icon: mdi:gauge
-              - entity: sensor.vonkajsia_stanica_absolutny_tlak
-                name: Absolútny tlak
-                icon: mdi:gauge-low
-              - entity: sensor.vonkajsia_stanica_tlakovy_trend
-                name: Tlakový trend
-                icon: mdi:trending-down
-              - entity: binary_sensor.vonkajsia_stanica_predikcia_dazda_tlak
-                name: Predikcia dažďa
-                icon: mdi:weather-rainy
-              - entity: binary_sensor.vonkajsia_stanica_vystraha_burka
-                name: Výstraha búrka
-                icon: mdi:weather-lightning-rainy
-
-          - type: gauge
-            entity: sensor.vonkajsia_stanica_tlak_hladina_mora
-            name: Tlak MSL (hPa)
-            min: 970
-            max: 1040
-            needle: true
-            severity:
-              green: 1013
-              yellow: 1000
-              red: 990
-
-          - type: history-graph
-            title: Tlak — 48h
-            hours_to_show: 48
-            entities:
-              - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
-                name: MSL tlak
-
-      # ── VIETOR ─────────────────────────────────────────────────────────────
-      - type: vertical-stack
-        cards:
-          - type: entities
-            title: Vietor
-            icon: mdi:weather-windy
-            entities:
-              - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
-                name: Rýchlosť (priemer)
-                icon: mdi:weather-windy
-              - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
-                name: Nárazy (gust)
-                icon: mdi:weather-windy-variant
-              - entity: sensor.vonkajsia_stanica_smer_vetra_text
-                name: Smer vetra
-                icon: mdi:compass
-              - entity: sensor.vonkajsia_stanica_smer_vetra_uhol
-                name: Uhol (°)
-                icon: mdi:compass-rose
-              - entity: sensor.vonkajsia_stanica_sila_vetra_beaufort
-                name: Beaufort
-                icon: mdi:flag
-
-          - type: gauge
-            entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
-            name: Rýchlosť vetra (km/h)
-            min: 0
-            max: 80
-            needle: true
-            severity:
-              green: 0
-              yellow: 20
-              red: 40
-
-          - type: history-graph
-            title: Vietor — 6h
-            hours_to_show: 6
-            entities:
-              - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
-                name: Priemer
-              - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
-                name: Nárazy
-
-      # ── ZRÁŽKY ─────────────────────────────────────────────────────────────
       - type: entities
-        title: Zrážky
+        title: Teplota a vlhkost
+        icon: mdi:thermometer
+        entities:
+          - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
+            name: Teplota
+            icon: mdi:thermometer
+          - entity: sensor.vonkajsia_stanica_pocitova_teplota
+            name: Pocitova teplota
+            icon: mdi:thermometer-lines
+          - entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
+            name: Vlhkost
+            icon: mdi:water-percent
+          - entity: sensor.vonkajsia_stanica_rosny_bod
+            name: Rosny bod
+            icon: mdi:thermometer-water
+          - entity: sensor.vonkajsia_stanica_absolutna_vlhkost
+            name: Absolutna vlhkost
+            icon: mdi:water
+
+      - type: gauge
+        entity: sensor.vonkajsia_stanica_vonkajsia_teplota
+        name: Teplota
+        min: -20
+        max: 45
+        needle: true
+        severity:
+          green: 10
+          yellow: 28
+          red: 36
+
+      - type: gauge
+        entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
+        name: Vlhkost
+        min: 0
+        max: 100
+        needle: true
+        severity:
+          green: 40
+          yellow: 70
+          red: 85
+
+      - type: history-graph
+        title: Teplota 24h
+        hours_to_show: 24
+        entities:
+          - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
+            name: Teplota
+          - entity: sensor.vonkajsia_stanica_pocitova_teplota
+            name: Pocitova
+          - entity: sensor.vonkajsia_stanica_rosny_bod
+            name: Rosny bod
+
+      - type: entities
+        title: Atmosfericky tlak
+        icon: mdi:gauge
+        entities:
+          - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
+            name: Tlak hladina mora
+            icon: mdi:gauge
+          - entity: sensor.vonkajsia_stanica_absolutny_tlak
+            name: Absolutny tlak
+            icon: mdi:gauge-low
+          - entity: sensor.vonkajsia_stanica_tlakovy_trend
+            name: Tlakovy trend
+            icon: mdi:trending-down
+          - entity: binary_sensor.vonkajsia_stanica_predikcia_dazda_tlak
+            name: Predikcia dazda
+            icon: mdi:weather-rainy
+          - entity: binary_sensor.vonkajsia_stanica_vystraha_burka
+            name: Vystraha burka
+            icon: mdi:weather-lightning-rainy
+
+      - type: gauge
+        entity: sensor.vonkajsia_stanica_tlak_hladina_mora
+        name: Tlak MSL hPa
+        min: 970
+        max: 1040
+        needle: true
+        severity:
+          green: 1013
+          yellow: 1000
+          red: 990
+
+      - type: history-graph
+        title: Tlak 48h
+        hours_to_show: 48
+        entities:
+          - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
+            name: MSL tlak
+
+      - type: entities
+        title: Vietor
+        icon: mdi:weather-windy
+        entities:
+          - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
+            name: Rychlost priemer
+            icon: mdi:weather-windy
+          - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
+            name: Narazy gust
+            icon: mdi:weather-windy-variant
+          - entity: sensor.vonkajsia_stanica_smer_vetra_text
+            name: Smer vetra
+            icon: mdi:compass
+          - entity: sensor.vonkajsia_stanica_smer_vetra_uhol
+            name: Uhol stupne
+            icon: mdi:compass-rose
+          - entity: sensor.vonkajsia_stanica_sila_vetra_beaufort
+            name: Beaufort
+            icon: mdi:flag
+
+      - type: gauge
+        entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
+        name: Rychlost vetra kmh
+        min: 0
+        max: 80
+        needle: true
+        severity:
+          green: 0
+          yellow: 20
+          red: 40
+
+      - type: history-graph
+        title: Vietor 6h
+        hours_to_show: 6
+        entities:
+          - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
+            name: Priemer
+          - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
+            name: Narazy
+
+      - type: entities
+        title: Zrazky
         icon: mdi:weather-rainy
         entities:
           - entity: binary_sensor.vonkajsia_stanica_detekcia_dazda
-            name: Detekcia dažďa
+            name: Detekcia dazda
             icon: mdi:weather-rainy
           - entity: sensor.vonkajsia_stanica_intenzita_zrazok
-            name: Intenzita zrážok
+            name: Intenzita zrazok
             icon: mdi:weather-pouring
-          - entity: sensor.vonkajsia_stanica_intenzita_zrazok_text
-            name: Intenzita (popis)
-            icon: mdi:text
           - entity: sensor.vonkajsia_stanica_celkove_zrazky
-            name: Celkové zrážky
+            name: Celkove zrazky
             icon: mdi:cup-water
           - entity: sensor.vonkajsia_stanica_vlhkost_dazdoveho_senzora
-            name: Vlhkosť senzora (%)
+            name: Vlhkost senzora
             icon: mdi:water-percent
 
-      # ── SVETLO & UV ────────────────────────────────────────────────────────
-      - type: vertical-stack
-        cards:
-          - type: entities
-            title: Svetlo & UV
+      - type: entities
+        title: Svetlo a UV
+        icon: mdi:white-balance-sunny
+        entities:
+          - entity: sensor.vonkajsia_stanica_intenzita_svetla
+            name: Intenzita svetla
             icon: mdi:white-balance-sunny
-            entities:
-              - entity: sensor.vonkajsia_stanica_intenzita_svetla
-                name: Intenzita svetla
-                icon: mdi:white-balance-sunny
-              - entity: sensor.vonkajsia_stanica_uv_index
-                name: UV Index
-                icon: mdi:sun-wireless
-
-          - type: gauge
-            entity: sensor.vonkajsia_stanica_uv_index
+          - entity: sensor.vonkajsia_stanica_uv_index
             name: UV Index
-            min: 0
-            max: 11
-            needle: true
-            severity:
-              green: 3
-              yellow: 6
-              red: 8
+            icon: mdi:sun-wireless
 
-          - type: history-graph
-            title: Svetlo — 12h
-            hours_to_show: 12
-            entities:
-              - entity: sensor.vonkajsia_stanica_intenzita_svetla
-                name: Lux
+      - type: gauge
+        entity: sensor.vonkajsia_stanica_uv_index
+        name: UV Index
+        min: 0
+        max: 11
+        needle: true
+        severity:
+          green: 3
+          yellow: 6
+          red: 8
 
-      # ── UPOZORNENIA ────────────────────────────────────────────────────────
       - type: entities
         title: Upozornenia
         icon: mdi:alert
@@ -229,64 +202,58 @@ views:
             name: Riziko mrazu
             icon: mdi:snowflake-alert
           - entity: binary_sensor.vonkajsia_stanica_vystraha_burka
-            name: Výstraha búrka
+            name: Vystraha burka
             icon: mdi:weather-lightning-rainy
           - entity: binary_sensor.vonkajsia_stanica_predikcia_dazda_tlak
-            name: Predikcia dažďa
+            name: Predikcia dazda
             icon: mdi:weather-rainy
           - entity: binary_sensor.vonkajsia_stanica_kriticka_bateria
-            name: Kritická batéria
+            name: Kriticka bateria
             icon: mdi:battery-alert
           - entity: binary_sensor.vonkajsia_stanica_chyba_i2c_senzorov
             name: Chyba senzorov
             icon: mdi:alert-circle
 
-      # ── BATÉRIA & DIAGNOSTIKA ──────────────────────────────────────────────
-      - type: vertical-stack
-        cards:
-          - type: entities
-            title: Batéria & Diagnostika
+      - type: entities
+        title: Bateria a diagnostika
+        icon: mdi:battery
+        entities:
+          - entity: sensor.vonkajsia_stanica_uroven_baterie
+            name: Uroven baterie
             icon: mdi:battery
-            entities:
-              - entity: sensor.vonkajsia_stanica_uroven_baterie
-                name: Úroveň batérie
-                icon: mdi:battery
-              - entity: sensor.vonkajsia_stanica_napatie_baterie
-                name: Napätie batérie
-                icon: mdi:battery-charging
-              - entity: sensor.vonkajsia_stanica_wifi_signal_dbm
-                name: WiFi signál (dBm)
-                icon: mdi:wifi
-              - entity: sensor.vonkajsia_stanica_kvalita_wifi
-                name: Kvalita WiFi (%)
-                icon: mdi:wifi-strength-3
-              - entity: sensor.vonkajsia_stanica_cas_behu
-                name: Čas behu
-                icon: mdi:timer
-              - entity: sensor.vonkajsia_stanica_pocet_bootov
-                name: Počet bootov
-                icon: mdi:restart
-              - entity: sensor.vonkajsia_stanica_teplota_cpu
-                name: Teplota CPU
-                icon: mdi:chip
-              - entity: sensor.vonkajsia_stanica_rezim_stanice
-                name: Režim stanice
-                icon: mdi:sleep
+          - entity: sensor.vonkajsia_stanica_napatie_baterie
+            name: Napatie baterie
+            icon: mdi:battery-charging
+          - entity: sensor.vonkajsia_stanica_wifi_signal_dbm
+            name: WiFi signal dBm
+            icon: mdi:wifi
+          - entity: sensor.vonkajsia_stanica_kvalita_wifi
+            name: Kvalita WiFi
+            icon: mdi:wifi-strength-3
+          - entity: sensor.vonkajsia_stanica_cas_behu
+            name: Cas behu
+            icon: mdi:timer
+          - entity: sensor.vonkajsia_stanica_pocet_bootov
+            name: Pocet bootov
+            icon: mdi:restart
+          - entity: sensor.vonkajsia_stanica_teplota_cpu
+            name: Teplota CPU
+            icon: mdi:chip
 
-          - type: gauge
-            entity: sensor.vonkajsia_stanica_uroven_baterie
-            name: Batéria (%)
-            min: 0
-            max: 100
-            needle: true
-            severity:
-              green: 50
-              yellow: 20
-              red: 10
+      - type: gauge
+        entity: sensor.vonkajsia_stanica_uroven_baterie
+        name: Bateria percento
+        min: 0
+        max: 100
+        needle: true
+        severity:
+          green: 50
+          yellow: 20
+          red: 10
 
-          - type: history-graph
-            title: Batéria — 7 dní
-            hours_to_show: 168
-            entities:
-              - entity: sensor.vonkajsia_stanica_uroven_baterie
-                name: Batéria %
+      - type: history-graph
+        title: Bateria 7 dni
+        hours_to_show: 168
+        entities:
+          - entity: sensor.vonkajsia_stanica_uroven_baterie
+            name: Bateria
