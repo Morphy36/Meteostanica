@@ -165,9 +165,12 @@ views:
           - entity: sensor.vonkajsia_stanica_intenzita_zrazok
             name: Intenzita zrazok
             icon: mdi:weather-pouring
-          - entity: sensor.vonkajsia_stanica_celkove_zrazky
-            name: Celkove zrazky
+          - entity: sensor.vonkajsia_stanica_zrazky_spolu
+            name: Zrazky spolu
             icon: mdi:cup-water
+          - entity: sensor.vonkajsia_stanica_zrazky_tento_cyklus
+            name: Zrazky (tento cyklus)
+            icon: mdi:weather-pouring
           - entity: sensor.vonkajsia_stanica_vlhkost_dazdoveho_senzora
             name: Vlhkost senzora
             icon: mdi:water-percent

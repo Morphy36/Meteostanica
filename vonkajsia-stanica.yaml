@@ -21,12 +21,13 @@ substitutions:
   rain_moisture_threshold: "15.0"   # zvýšený prah proti šumu
   frost_temp_threshold: "3.0"
   storm_pressure_drop: "-2.5"
+  rain_trend_threshold: "-1.5"   # hPa/h — prah pre "tlak klesá" v predikcii dažďa
 esphome:
   name: ${dev_name}
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.7.1"
+    version: "3.8.0"
   on_boot:
     priority: 600
     then:
@@ -108,7 +109,7 @@ api:
 ota:
   platform: esphome
 logger:
-  level: DEBUG
+  level: INFO      # DEBUG len dočasne pri ladení — spomaľuje boot a míňa batériu
   baud_rate: 0
 i2c:
   sda: GPIO22
@@ -141,7 +142,7 @@ globals:
   - id: pressure_threshold
     type: float
     restore_value: true
-    initial_value: "-0.3"
+    initial_value: ${rain_trend_threshold}
   - id: humidity_threshold
     type: float
     restore_value: true
@@ -174,6 +175,22 @@ globals:
     type: int
     restore_value: true    # prežije deep sleep — sleduje dlhodobé zaseknutie
     initial_value: "0"
+  - id: last_humidity_value
+    type: float
+    restore_value: true    # posledné meranie SHT41 — detekcia zaseknutého senzora
+    initial_value: "NAN"
+  - id: last_rain_total
+    type: float
+    restore_value: false   # pulse_counter total sa po každom boote vynuluje
+    initial_value: "0.0"
+  - id: pressure_logged_this_boot
+    type: bool
+    restore_value: false   # zabráni viacnásobnému zápisu tlaku do histórie v jednom boote
+    initial_value: "false"
+  - id: hum_rising_boot
+    type: bool
+    restore_value: false   # "vlhkosť stúpa oproti minulému cyklu" — vypočítané raz za boot
+    initial_value: "false"
   - id: daily_rain_accumulator
     type: float
     restore_value: true
@@ -184,7 +201,7 @@ globals:
     initial_value: "false"  # blokuje počítanie zrážok počas prvých 10s po boote
   - id: ota_mode_active
     type: bool
-    restore_value: true     # uloží sa do RTC pamäte — prežije deep sleep!
+    restore_value: true     # uložené v NVS — prežije deep sleep
     initial_value: "false"
   - id: last_sleep_duration_s
     type: float
@@ -306,13 +323,14 @@ sensor:
     id: rain_sensor_percent
     unit_of_measurement: "%"
     icon: "mdi:water-percent"
+    state_class: measurement
     update_interval: never
     lambda: |-
       if (!id(rain_sensor_voltage).has_state()) return NAN;
       float val = id(rain_sensor_voltage).state;
       float dry = ${rain_calib_dry};
       float wet = ${rain_calib_wet};
-      if (abs(dry - wet) < 0.01f) return NAN;
+      if (fabsf(dry - wet) < 0.01f) return NAN;
       return clamp((val - dry) / (wet - dry) * 100.0f, 0.0f, 100.0f);
   - platform: pulse_counter
     pin:
@@ -321,6 +339,9 @@ sensor:
     name: "Rýchlosť vetra (Priemer)"
     id: wind_speed
     unit_of_measurement: "km/h"
+    device_class: wind_speed
+    state_class: measurement
+    accuracy_decimals: 1
     update_interval: 3s
     use_pcnt: false
     internal_filter: 3ms       # znížené z 20ms — 20ms filtrovalo reálne pulzy pri rýchlejšom vetre a dlhom kábli
@@ -331,6 +352,9 @@ sensor:
     source_id: wind_speed
     name: "Rýchlosť vetra (Náraz-Gust)"
     id: wind_gust
+    device_class: wind_speed
+    state_class: measurement
+    accuracy_decimals: 1
     filters:
       - max:
           window_size: 5
@@ -343,26 +367,39 @@ sensor:
     name: "Intenzita zrážok"
     id: rain_fall_rate
     unit_of_measurement: "mm/h"
+    device_class: precipitation_intensity
+    state_class: measurement
+    accuracy_decimals: 1
     update_interval: 60s
     use_pcnt: false
     internal_filter: 500ms     # zvýšené z 200ms — 3m kábel pri boote generuje kapacitívne falošné pulzy
     filters:
       - multiply: 16.764
     total:
-      name: "Celkové zrážky"
+      name: "Zrážky (tento cyklus)"
       id: rain_total
       unit_of_measurement: "mm"
       accuracy_decimals: 2
+      device_class: precipitation
+      state_class: measurement    # NIE total_increasing — počítadlo sa nuluje po každom deep sleep
       filters:
         - multiply: 0.2794
       on_value:
         then:
           - lambda: |-
+              // pulse_counter total sa nuluje pri každom boote, preto akumulujeme prírastky
               if (!id(rain_boot_ready)) {
                 ESP_LOGW("rain", "Boot guard aktívny — ignorujem pulzy (%.2f mm)", x);
+                id(last_rain_total) = x;
                 return;
               }
-              id(daily_rain_accumulator) = x;
+              float delta = x - id(last_rain_total);
+              if (delta < 0.0f) delta = x;          // počítadlo sa medzitým vynulovalo
+              if (delta > 0.0f) {
+                id(daily_rain_accumulator) += delta;
+                ESP_LOGI("rain", "+%.2f mm → kumulatívne %.2f mm", delta, id(daily_rain_accumulator));
+              }
+              id(last_rain_total) = x;
   - platform: adc
     pin: GPIO33
     id: wind_vane_voltage
@@ -416,6 +453,7 @@ sensor:
     icon: "mdi:gauge"
     device_class: atmospheric_pressure
     state_class: measurement
+    update_interval: never    # publikuje sa z on_value BME280 tlaku
   - platform: template
     name: "Tlakový trend"
     id: pressure_trend_sensor
@@ -432,6 +470,7 @@ sensor:
     icon: "mdi:thermometer-water"
     device_class: temperature
     state_class: measurement
+    update_interval: never
     lambda: |-
       if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
       float T = id(sht41_temperature).state;
@@ -439,7 +478,7 @@ sensor:
       if (RH <= 0.0f) return NAN;
       float a = 17.27f, b = 237.7f;
       float alpha = ((a * T) / (b + T)) + log(RH / 100.0f);
-      if (abs(a - alpha) < 0.001f) return NAN;
+      if (fabsf(a - alpha) < 0.001f) return NAN;
       return (b * alpha) / (a - alpha);
   - platform: template
     name: "Absolútna vlhkosť"
@@ -448,6 +487,7 @@ sensor:
     accuracy_decimals: 1
     icon: "mdi:water"
     state_class: measurement
+    update_interval: never
     lambda: |-
       if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
       float T = id(sht41_temperature).state;
@@ -461,6 +501,7 @@ sensor:
     accuracy_decimals: 1
     icon: "mdi:thermometer-check"
     state_class: measurement
+    update_interval: never
     lambda: |-
       if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
       float T = id(sht41_temperature).state;
@@ -473,11 +514,13 @@ sensor:
     icon: "mdi:thermometer-lines"
     device_class: temperature
     state_class: measurement
+    update_interval: never
     lambda: |-
-      if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state() || !id(wind_speed).has_state()) return NAN;
+      if (!id(sht41_temperature).has_state() || !id(sht41_humidity).has_state()) return NAN;
       float t = id(sht41_temperature).state;
       float h = id(sht41_humidity).state;
-      float v = id(wind_speed).state;
+      if (isnan(t) || isnan(h)) return NAN;
+      float v = (id(wind_speed).has_state() && !isnan(id(wind_speed).state)) ? id(wind_speed).state : 0.0f;
       if (t <= 10.0f && v >= 4.8f)
         return 13.12f + (0.6215f*t) - (11.37f*pow(v,0.16f)) + (0.3965f*t*pow(v,0.16f));
       if (t >= 26.0f && h >= 40.0f) {
@@ -493,6 +536,8 @@ sensor:
     unit_of_measurement: "UVI"
     accuracy_decimals: 1
     icon: "mdi:sun-wireless"
+    state_class: measurement
+    update_interval: never
     lambda: |-
       if (!id(uv_raw_data).has_state()) return NAN;
       float raw = id(uv_raw_data).state;
@@ -506,6 +551,8 @@ sensor:
     unit_of_measurement: "%"
     device_class: battery
     state_class: measurement
+    accuracy_decimals: 0
+    update_interval: never
     lambda: |-
       if (!id(battery_voltage).has_state()) return NAN;
       float v = id(battery_voltage).state;
@@ -558,6 +605,22 @@ sensor:
     entity_category: diagnostic
     accuracy_decimals: 0
     lambda: 'return (float)id(sensor_error_count);'
+  - platform: template
+    name: "Zrážky spolu"
+    id: rain_cumulative
+    unit_of_measurement: "mm"
+    accuracy_decimals: 2
+    icon: "mdi:cup-water"
+    device_class: precipitation
+    state_class: total_increasing    # prežíva deep sleep, nuluje sa len cez "Reset diagnostiky"
+    update_interval: never
+    lambda: 'return id(daily_rain_accumulator);'
+  - platform: template
+    name: "Zaseknutá vlhkosť (počet)"
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    update_interval: never
+    lambda: 'return (float)id(humidity_stuck_count);'
 binary_sensor:
   - platform: status
     name: "Status Stanice"
@@ -567,19 +630,19 @@ binary_sensor:
     device_class: moisture
     lambda: |-
       bool analog = id(rain_sensor_percent).has_state() &&
+                    !isnan(id(rain_sensor_percent).state) &&
                     id(rain_sensor_percent).state > ${rain_moisture_threshold};
       bool bucket = id(rain_fall_rate).has_state() &&
                     id(rain_fall_rate).state > 0.5f;
       return analog || bucket;
     filters:
-      - delayed_on: 5s
-      - delayed_off: 20s
+      - delayed_on: 5s    # analógová doštička šumí; delayed_off nemá zmysel — stav neprežije deep sleep
   - platform: template
     name: "Kritická batéria"
     id: low_battery
     device_class: battery
     lambda: |-
-      if (!id(battery_voltage).has_state()) return false;
+      if (!id(battery_voltage).has_state() || isnan(id(battery_voltage).state)) return false;
       return id(battery_voltage).state < (${batt_min_voltage} + 0.1f);
   - platform: template
     name: "Riziko mrazu"
@@ -587,27 +650,37 @@ binary_sensor:
     icon: "mdi:snowflake-alert"
     lambda: |-
       if (!id(sht41_temperature).has_state() || !id(dew_point).has_state()) return false;
-      return (id(sht41_temperature).state < ${frost_temp_threshold}) && (id(dew_point).state < 0.0f);
-    filters:
-      - delayed_on: 30s
+      float t = id(sht41_temperature).state;
+      float dp = id(dew_point).state;
+      if (isnan(t) || isnan(dp)) return false;
+      return (t < ${frost_temp_threshold}) && (dp < 0.0f);
+    # Bez delayed_on: rosný bod aj teplota sa počas jedného bdenia počítajú práve raz,
+    # takže filter nemal čo vyhladzovať — iba oddialil publikovanie stavu za deep sleep.
   - platform: template
     name: "Výstraha: Búrka"
     id: storm_warning
     icon: "mdi:weather-lightning-rainy"
+    # Bez delayed_on: pressure_trend_value je regresia cez niekoľko hodín (už vyhladená)
+    # a počas jedného bdenia sa nemení. Pôvodných 60 s bolo presne na hranici uptime,
+    # pri ktorej stanica zaspáva — výstraha sa preto publikovala len náhodne.
     lambda: 'return id(pressure_trend_value) < ${storm_pressure_drop};'
-    filters:
-      - delayed_on: 60s
   - platform: template
     name: "Predikcia dažďa (Tlak)"
     id: rain_prediction
     icon: "mdi:weather-rainy"
+    # Čistá funkcia. Lambda binárneho senzora beží v KAŽDOM loop() (stovky × za sekundu),
+    # takže pôvodná verzia prepisovala celý 6-prvkový buffer pressure_history tou istou
+    # aktuálnou hodnotou a prev_humidity nastavovala na aktuálnu vlhkosť — trend tým vychádzal
+    # nula a hum_rising nikdy nenastalo. Zápis histórie je teraz v update_pressure_trend (1× za boot).
     lambda: |-
-      if (!id(bme280_pressure).has_state() || !id(sht41_humidity).has_state()) return false;
-      float cur_p = id(bme280_pressure).state;
-      float hum   = id(sht41_humidity).state;
-      id(pressure_history)[id(history_index) % 6] = cur_p;
-      id(pressure_time_index)[id(history_index) % 6] = id(boot_count);
-      id(history_index) = (id(history_index) + 1) % 6;
+      if (!id(sht41_humidity).has_state() || isnan(id(sht41_humidity).state)) return false;
+      float hum = id(sht41_humidity).state;
+      float trend = id(pressure_trend_value);
+      if (trend < ${storm_pressure_drop}) return true;
+      // Použij MSL tlak (normalizovaný na hladinu mora) — absolútny tlak pri 430 m
+      // je vždy ~965 hPa, čo by falošne spúšťalo podmienku s hranicou 1010 hPa.
+      if (id(msl_pressure).has_state() && !isnan(id(msl_pressure).state) &&
+          id(msl_pressure).state < 1010.0f && hum > id(humidity_threshold)) return true;
       int valid = 0; float sum = 0.0f;
       for (int i = 0; i < 6; i++) {
         if (!isnan(id(pressure_history)[i]) && id(pressure_history)[i] > 800.0f) {
@@ -615,25 +688,16 @@ binary_sensor:
         }
       }
       if (valid < 2) return false;
+      if (!id(bme280_pressure).has_state() || isnan(id(bme280_pressure).state)) return false;
       float avg = sum / valid;
-      bool hum_rising = false;
-      if (!isnan(id(prev_humidity)))
-        hum_rising = (hum - id(prev_humidity)) > 2.0f;
-      id(prev_humidity) = hum;
-      float trend = id(pressure_trend_value);
-      // Použij MSL tlak (normalizovaný na hladinu mora) — absolútny tlak pri 430m
-      // je vždy ~965 hPa, čo by falošne triggerovalo podmienku s hranicou 1000 hPa
-      float msl = id(msl_pressure).has_state() ? id(msl_pressure).state : (cur_p + 50.0f);
-      if (trend < -1.5f && cur_p < avg && hum_rising) return true;
-      if (msl < 1010.0f && hum > id(humidity_threshold)) return true;
-      if (trend < ${storm_pressure_drop}) return true;
-      return false;
+      // pressure_threshold je nastaviteľný cez entitu "Prah poklesu tlaku"
+      return trend < id(pressure_threshold) && id(bme280_pressure).state < avg && id(hum_rising_boot);
   - platform: template
     name: "Chyba I2C senzorov"
     id: i2c_error_flag
     device_class: problem
     entity_category: diagnostic
-    lambda: 'return !id(i2c_initialized);'
+    lambda: 'return !id(i2c_initialized) || id(humidity_stuck_count) >= 5;'
 text_sensor:
   - platform: template
     name: "Odporúčanie oblečenia"
@@ -687,7 +751,7 @@ text_sensor:
     lambda: |-
       if (!id(wind_direction_angle).has_state()) return std::string("N/A");
       float angle = id(wind_direction_angle).state;
-      if (isnan(angle)) return std::string("Bezvetrie");
+      if (isnan(angle)) return std::string("Neurčený");
       const char* dirs[] = {"S","SSV","SV","VSV","V","VJV","JV","JJV","J","JJZ","JZ","ZJZ","Z","ZSZ","SZ","SSZ"};
       return std::string(dirs[(int)((angle + 11.25f) / 22.5f) % 16]);
   - platform: template
@@ -704,9 +768,9 @@ text_sensor:
       if (v < 20.0f) return std::string("4 – Mierny vietor");
       if (v < 29.0f) return std::string("5 – Čerstvý vietor");
       if (v < 39.0f) return std::string("6 – Silný vietor");
-      if (v < 50.0f) return std::string("7 – Mierny štor");
-      if (v < 62.0f) return std::string("8 – Čerstvý štor");
-      if (v < 75.0f) return std::string("9 – Silný štor");
+      if (v < 50.0f) return std::string("7 – Mierny štorm");
+      if (v < 62.0f) return std::string("8 – Čerstvý štorm");
+      if (v < 75.0f) return std::string("9 – Silný štorm");
       return std::string("10+ – BÚRKA ⚠️");
   - platform: template
     name: "Intenzita zrážok (Text)"
@@ -831,7 +895,10 @@ switch:
           id(sensor_error_count) = 0;
           id(wifi_fail_count) = 0;
           id(i2c_restart_attempts) = 0;
+          id(humidity_stuck_count) = 0;
+          id(last_humidity_value) = NAN;
           id(daily_rain_accumulator) = 0.0f;
+          id(last_rain_total) = 0.0f;
           ESP_LOGI("diag", "Diagnostické počítadlá a akumulátor zrážok resetované.");
 number:
   - platform: template
@@ -841,7 +908,7 @@ number:
     min_value: -5.0
     max_value: 0.0
     step: 0.1
-    initial_value: -0.3
+    initial_value: ${rain_trend_threshold}
     optimistic: true
     entity_category: config
     set_action:
@@ -897,6 +964,7 @@ script:
                 level: WARN
                 tag: "i2c"
                 format: "I2C zlyhalo → Power cycle..."
+            - lambda: 'id(i2c_restart_attempts) += 1;'
             - output.turn_off: i2c_sensor_power
             - delay: 500ms
             - output.turn_on: i2c_sensor_power
@@ -910,7 +978,8 @@ script:
                   - logger.log:
                       level: INFO
                       tag: "i2c"
-                      format: "I2C OK po power cycle."
+                      format: "I2C OK po power cycle (pokusov: %d)."
+                      args: ['id(i2c_restart_attempts)']
                 else:
                   - logger.log:
                       level: ERROR
@@ -954,12 +1023,31 @@ script:
                       condition:
                         lambda: 'return id(ota_mode_active);'
                       then:
+                        # Pozor: `script.execute: wifi_connect_logic` odtiaľto bol NO-OP —
+                        # skript beží (mode: single), takže rekurzívne spustenie sa zahodilo.
                         - logger.log:
                             level: INFO
                             tag: "ota"
-                            format: "OTA režim — API ešte nepripojené, čakám 30s a skúsim znova."
-                        - delay: 30s
-                        - script.execute: wifi_connect_logic
+                            format: "OTA režim — API ešte nepripojené, čakám max. 3 min."
+                        - wait_until:
+                            condition:
+                              api.connected:
+                            timeout: 3min
+                        - if:
+                            condition: api.connected
+                            then:
+                              - script.execute: read_all_sensors
+                              - delay: 3min
+                              - lambda: 'id(ota_mode_active) = false;'
+                              - script.execute: check_and_enter_deep_sleep
+                            else:
+                              - logger.log:
+                                  level: WARN
+                                  tag: "ota"
+                                  format: "OTA režim — API stále nedostupné → spím 5 min."
+                              - deep_sleep.enter:
+                                  id: deep_sleep_control
+                                  sleep_duration: 5min
                       else:
                         - logger.log:
                             level: WARN
@@ -1019,19 +1107,45 @@ script:
       # smer vetra vypočítame až po naplnení filtra
       - component.update: wind_direction_angle
       - component.update: rain_sensor_percent
+      # Watchdog: SHT41 sa vie "zaseknúť" a vracať stále tú istú hodnotu
+      - lambda: |-
+          if (id(sht41_humidity).has_state() && !isnan(id(sht41_humidity).state)) {
+            float h = id(sht41_humidity).state;
+            if (!isnan(id(last_humidity_value)) && fabsf(h - id(last_humidity_value)) < 0.001f) {
+              id(humidity_stuck_count) += 1;
+              ESP_LOGW("sht41", "Vlhkosť nezmenená (%.2f%%) už %d meraní za sebou.",
+                       h, id(humidity_stuck_count));
+              if (id(humidity_stuck_count) == 5) id(sensor_error_count) += 1;
+            } else {
+              id(humidity_stuck_count) = 0;
+            }
+            id(last_humidity_value) = h;
+            // Porovnanie s minulým cyklom musí prebehnúť skôr, než prepíšeme prev_humidity
+            id(hum_rising_boot) = !isnan(id(prev_humidity)) && (h - id(prev_humidity)) > 2.0f;
+          }
+      # 1) odvodené veličiny (závisia od surových senzorov)
       - component.update: dew_point
       - component.update: absolute_humidity
       - component.update: comfort_index
       - component.update: feels_like_temp
       - component.update: uv_index_calc
       - component.update: battery_level
+      - component.update: pressure_trend_sensor
+      # 2) binárne senzory sa vyhodnocujú samy v každom loop(); stačí nechať
+      #    dobehnúť ich delayed_on filtre skôr, než ich prečítajú textové senzory
+      - delay: 6s
+      # 3) textové senzory (závisia od binárnych)
       - component.update: wind_dir_text
       - component.update: wind_beaufort_text
       - component.update: rain_intensity_text
       - component.update: clothing_recommendation
       - component.update: weather_forecast_text
       - component.update: station_mode_text
-      - component.update: pressure_trend_sensor
+      - component.update: rain_cumulative
+      # 4) až úplne na záver prepíš referenciu pre porovnanie v ĎALŠOM cykle
+      - lambda: |-
+          if (id(sht41_humidity).has_state() && !isnan(id(sht41_humidity).state))
+            id(prev_humidity) = id(sht41_humidity).state;
   - id: uspat_ltr390
     then:
       - lambda: |-
@@ -1067,6 +1181,20 @@ script:
     mode: single
     then:
       - lambda: |-
+          // 1) Ulož aktuálnu vzorku do kruhového bufferu — raz za boot.
+          //    (Predtým to robil lambda binárneho senzora rain_prediction, ktorý
+          //     bežal AŽ PO výpočte trendu, takže regresia počítala zo starých dát.)
+          if (!id(pressure_logged_this_boot) && id(bme280_pressure).has_state()) {
+            float p = id(bme280_pressure).state;
+            if (!isnan(p) && p > 800.0f) {
+              int idx = id(history_index) % 6;
+              id(pressure_history)[idx] = p;
+              id(pressure_time_index)[idx] = id(boot_count);
+              id(history_index) = (id(history_index) + 1) % 6;
+              id(pressure_logged_this_boot) = true;
+            }
+          }
+          // 2) Lineárna regresia tlaku v čase → trend v hPa/h
           float sum_x=0,sum_y=0,sum_xx=0,sum_xy=0;
           int n=0;
           float avg_s = id(last_sleep_duration_s);
@@ -1080,7 +1208,7 @@ script:
           }
           if (n < 2) { id(pressure_trend_value) = 0.0f; return; }
           float denom = n*sum_xx - sum_x*sum_x;
-          if (abs(denom) < 0.0001f) { id(pressure_trend_value) = 0.0f; return; }
+          if (fabsf(denom) < 0.0001f) { id(pressure_trend_value) = 0.0f; return; }
           id(pressure_trend_value) = clamp((n*sum_xy - sum_x*sum_y)/denom, -10.0f, 10.0f);
           ESP_LOGD("pressure","Trend: %.2f hPa/h (n=%d)", id(pressure_trend_value), n);
   - id: check_and_enter_deep_sleep
@@ -1097,11 +1225,14 @@ script:
                 args: ['(int)id(ota_mode_active)', 'id(uptime_sensor).state']
           else:
             - lambda: |-
-                float bat   = id(battery_level).has_state() ? id(battery_level).state : 50.0f;
+                // has_state() je true aj keď senzor publikoval NAN — treba isnan()
+                float bat = (id(battery_level).has_state() && !isnan(id(battery_level).state))
+                            ? id(battery_level).state : 50.0f;
+                float wind = (id(wind_speed).has_state() && !isnan(id(wind_speed).state))
+                            ? id(wind_speed).state : 0.0f;
                 bool  rain  = id(rain_detection).state;
                 bool  rain_p = id(rain_prediction).state;
                 bool  storm = id(storm_warning).state;
-                float wind  = id(wind_speed).has_state() ? id(wind_speed).state : 0.0f;
                 uint32_t sleep_ms = ${sleep_normal_mode_ms};
                 int mode_id = 0;
                 if (bat < ${bat_eco_threshold}) {
