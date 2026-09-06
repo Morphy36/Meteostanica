@@ -888,6 +888,17 @@ switch:
     name: "Reštartovať Stanicu"
     entity_category: config
   - platform: template
+    name: "Reset počítadla zrážok"
+    icon: "mdi:water-off"
+    entity_category: config
+    # Samostatný reset zrážok — vo v3.0 to bolo dedikované tlačidlo a chýbalo tu.
+    turn_on_action:
+      - lambda: |-
+          id(daily_rain_accumulator) = 0.0f;
+          id(last_rain_total) = 0.0f;
+          ESP_LOGI("rain", "Kumulatívny súčet zrážok vynulovaný.");
+      - component.update: rain_cumulative
+  - platform: template
     name: "Reset diagnostiky"
     icon: "mdi:restore"
     entity_category: config
