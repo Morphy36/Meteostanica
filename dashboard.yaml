@@ -1,444 +1,580 @@
-title: Meteostanica
+# Lovelace dashboard pre meteostanicu — nasadený v HA ako "Meteostanica ESP"
+# (url_path: meteostanica-esp, storage mode).
+#
+# POZOR na entity ID: zariadenie je v Home Assistante premenované na
+# "MeteoStanica - Vonku 1", takže entity majú prefix `meteostanica_vonku_1_`,
+# nie `vonkajsia_stanica_` odvodený z `friendly_name` v vonkajsia-stanica.yaml.
+# Novšie entity (zrazky_spolu, zrazky_tento_cyklus, zaseknuta_vlhkost_pocet)
+# dostali od HA navyše prefix `vonku_`. Pri čistej inštalácii budú ID iné —
+# vygeneruj si ich z /api/states, needituj ručne.
+#
+# Tento súbor je záloha; zdroj pravdy je storage-mode dashboard v HA.
 views:
-
-  # ==========================================================================
-  # 1) PREHĽAD — čo chce človek vidieť na prvý pohľad
-  # ==========================================================================
-  - title: Prehlad
-    path: meteostanica
-    icon: mdi:weather-partly-cloudy
+- title: Prehlad
+  path: prehlad
+  type: sections
+  max_columns: 3
+  icon: mdi:weather-partly-cloudy
+  sections:
+  - type: grid
     cards:
+    - type: heading
+      heading: Teraz
+      icon: mdi:weather-partly-cloudy
+      heading_style: title
+    - type: markdown
+      grid_options:
+        columns: full
+      content: '## {{ states(''sensor.meteostanica_vonku_1_predpoved_pocasia'') }}
 
-      - type: markdown
-        content: |
-          ## {{ states('sensor.vonkajsia_stanica_predpoved_pocasia') }}
-          {{ states('sensor.vonkajsia_stanica_odporucanie_oblecenia') }}
+        {{ states(''sensor.meteostanica_vonku_1_odporucanie_oblecenia'') }}
 
-          ---
-          **{{ states('sensor.vonkajsia_stanica_vonkajsia_teplota') }} °C**
-          (pocitovo {{ states('sensor.vonkajsia_stanica_pocitova_teplota') }} °C)
-          · {{ states('sensor.vonkajsia_stanica_vonkajsia_vlhkost') }} %
-          · {{ states('sensor.vonkajsia_stanica_tlak_hladina_mora') }} hPa
-          {% if states('sensor.vonkajsia_stanica_smer_vetra_text') not in ['N/A','unknown','unavailable'] %}
-          · vietor {{ states('sensor.vonkajsia_stanica_rychlost_vetra_priemer') }} km/h
-          z {{ states('sensor.vonkajsia_stanica_smer_vetra_text') }}
-          {% endif %}
 
-          {% set t = states.sensor.vonkajsia_stanica_vonkajsia_teplota %}
-          {% if t %}*Data spred {{ relative_time(t.last_changed) }} — stanica vacsinu casu spi.*{% endif %}
-
-      - type: glance
-        title: Stav stanice
-        show_name: true
-        show_icon: true
-        show_state: true
-        entities:
-          - entity: binary_sensor.vonkajsia_stanica_status_stanice
-            name: Status
-          - entity: sensor.vonkajsia_stanica_uroven_baterie
-            name: Bateria
-            icon: mdi:battery
-          - entity: sensor.vonkajsia_stanica_rezim_stanice
-            name: Rezim
-            icon: mdi:sleep
-
-      # Upozornenia hore, nie na konci dashboardu — inak sa k nim nikto nedoscrolluje.
-      - type: entities
-        title: Upozornenia
-        icon: mdi:alert
-        state_color: true
-        entities:
-          - entity: binary_sensor.vonkajsia_stanica_detekcia_dazda
-            name: Prsi
-            icon: mdi:weather-rainy
-          - entity: binary_sensor.vonkajsia_stanica_predikcia_dazda_tlak
-            name: Predikcia dazda
-            icon: mdi:weather-rainy
-          - entity: binary_sensor.vonkajsia_stanica_vystraha_burka
-            name: Vystraha burka
-            icon: mdi:weather-lightning-rainy
-          - entity: binary_sensor.vonkajsia_stanica_riziko_mrazu
-            name: Riziko mrazu
-            icon: mdi:snowflake-alert
-          - entity: binary_sensor.vonkajsia_stanica_kriticka_bateria
-            name: Kriticka bateria
-            icon: mdi:battery-alert
-          - entity: binary_sensor.vonkajsia_stanica_chyba_i2c_senzorov
-            name: Chyba senzorov
-            icon: mdi:alert-circle
-
-      - type: entities
-        title: Teplota a vlhkost
-        icon: mdi:thermometer
-        entities:
-          - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-            name: Teplota
-            icon: mdi:thermometer
-          - entity: sensor.vonkajsia_stanica_pocitova_teplota
-            name: Pocitova teplota
-            icon: mdi:thermometer-lines
-          - entity: sensor.vonkajsia_stanica_index_tepelneho_komfortu
-            name: Index komfortu
-            icon: mdi:thermometer-check
-          - type: divider
-          - entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
-            name: Vlhkost
-            icon: mdi:water-percent
-          - entity: sensor.vonkajsia_stanica_rosny_bod
-            name: Rosny bod
-            icon: mdi:thermometer-water
-          - entity: sensor.vonkajsia_stanica_absolutna_vlhkost
-            name: Absolutna vlhkost
-            icon: mdi:water
-
-      - type: gauge
-        entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-        name: Teplota
-        min: -20
-        max: 45
-        needle: true
-        # Prahy v HA gauge sú DOLNÉ hranice pásma — najnižší musí sedieť s `min`,
-        # inak spodok stupnice ostane bez farby.
-        severity:
-          green: -20
-          yellow: 28
-          red: 36
-
-      - type: gauge
-        entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
-        name: Vlhkost
-        min: 0
-        max: 100
-        needle: true
-        severity:
-          green: 0
-          yellow: 70
-          red: 85
-
-      - type: entities
-        title: Vietor
-        icon: mdi:weather-windy
-        entities:
-          - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
-            name: Rychlost priemer
-            icon: mdi:weather-windy
-          - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
-            name: Narazy gust
-            icon: mdi:weather-windy-variant
-          - entity: sensor.vonkajsia_stanica_smer_vetra_text
-            name: Smer vetra
-            icon: mdi:compass
-          - entity: sensor.vonkajsia_stanica_sila_vetra_beaufort
-            name: Beaufort
-            icon: mdi:flag
-
-      - type: entities
-        title: Zrazky
+        {% set t = states.sensor.meteostanica_vonku_1_vonkajsia_teplota %}{% if t %}*Data spred {{ relative_time(t.last_changed)
+        }} — stanica vacsinu casu spi.*{% endif %}'
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+      name: Teplota
+      grid_options:
+        columns: 6
+      icon: mdi:thermometer
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_pocitova_teplota
+      name: Pocitovo
+      grid_options:
+        columns: 6
+      icon: mdi:thermometer-lines
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+      name: Vlhkost
+      grid_options:
+        columns: 6
+      icon: mdi:water-percent
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
+      name: Tlak MSL
+      grid_options:
+        columns: 6
+      icon: mdi:gauge
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
+      name: Vietor
+      grid_options:
+        columns: 6
+      icon: mdi:weather-windy
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_smer_vetra_text
+      name: Smer
+      grid_options:
+        columns: 6
+      icon: mdi:compass
+    - type: tile
+      entity: sensor.vonku_meteostanica_vonku_1_zrazky_spolu
+      name: Zrazky spolu
+      grid_options:
+        columns: 6
+      icon: mdi:cup-water
+    - type: tile
+      entity: sensor.meteostanica_vonku_1_uroven_baterie
+      name: Bateria
+      grid_options:
+        columns: 6
+      icon: mdi:battery
+  - type: grid
+    cards:
+    - type: heading
+      heading: Upozornenia
+      icon: mdi:alert
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: binary_sensor.meteostanica_vonku_1_detekcia_dazda
+        name: Prsi
         icon: mdi:weather-rainy
-        entities:
-          # "Zrážky spolu" akumuluje naprieč deep sleep cyklami (total_increasing).
-          # "Zrážky (tento cyklus)" sa nuluje pri každom prebudení — je len kontrolná.
-          - entity: sensor.vonkajsia_stanica_zrazky_spolu
-            name: Zrazky spolu
-            icon: mdi:cup-water
-          - entity: sensor.vonkajsia_stanica_intenzita_zrazok_text
-            name: Intenzita
-            icon: mdi:weather-pouring
-          - entity: sensor.vonkajsia_stanica_intenzita_zrazok
-            name: Intenzita mm/h
-            icon: mdi:weather-pouring
-          - entity: sensor.vonkajsia_stanica_vlhkost_dazdoveho_senzora
-            name: Vlhkost dosticky
-            icon: mdi:water-percent
-
-      - type: entities
-        title: Svetlo a UV
+      - entity: binary_sensor.meteostanica_vonku_1_predikcia_dazda_tlak
+        name: Predikcia dazda
+        icon: mdi:weather-rainy
+      - entity: binary_sensor.meteostanica_vonku_1_vystraha_burka
+        name: Vystraha burka
+        icon: mdi:weather-lightning-rainy
+      - entity: binary_sensor.meteostanica_vonku_1_riziko_mrazu
+        name: Riziko mrazu
+        icon: mdi:snowflake-alert
+      - entity: binary_sensor.meteostanica_vonku_1_kriticka_bateria
+        name: Kriticka bateria
+        icon: mdi:battery-alert
+      - entity: binary_sensor.meteostanica_vonku_1_chyba_i2c_senzorov
+        name: Chyba I2C senzorov
+        icon: mdi:alert-circle
+      - entity: binary_sensor.meteostanica_vonku_1_status_stanice
+        name: Status stanice
+        icon: mdi:access-point
+      state_color: true
+    - type: heading
+      heading: Rezim
+      icon: mdi:sleep
+      heading_style: subtitle
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_rezim_stanice
+        name: Rezim spanku
+        icon: mdi:sleep
+      - entity: sensor.meteostanica_vonku_1_cas_behu
+        name: Cas behu
+        icon: mdi:timer
+  - type: grid
+    cards:
+    - type: heading
+      heading: Teplota a vlhkost
+      icon: mdi:thermometer
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+        name: Teplota
+        icon: mdi:thermometer
+      - entity: sensor.meteostanica_vonku_1_pocitova_teplota
+        name: Pocitova teplota
+        icon: mdi:thermometer-lines
+      - entity: sensor.meteostanica_vonku_1_index_tepelneho_komfortu
+        name: Index komfortu
+        icon: mdi:thermometer-check
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+        name: Vlhkost
+        icon: mdi:water-percent
+      - entity: sensor.meteostanica_vonku_1_rosny_bod
+        name: Rosny bod
+        icon: mdi:thermometer-water
+      - entity: sensor.meteostanica_vonku_1_absolutna_vlhkost
+        name: Absolutna vlhkost
+        icon: mdi:water
+    - type: gauge
+      entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+      name: Teplota
+      min: -20
+      max: 45
+      needle: true
+      severity:
+        green: -20
+        yellow: 28
+        red: 36
+      grid_options:
+        columns: 6
+    - type: gauge
+      entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+      name: Vlhkost
+      min: 0
+      max: 100
+      needle: true
+      severity:
+        green: 0
+        yellow: 70
+        red: 85
+      grid_options:
+        columns: 6
+  - type: grid
+    cards:
+    - type: heading
+      heading: Vietor
+      icon: mdi:weather-windy
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
+        name: Rychlost priemer
+        icon: mdi:weather-windy
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_naraz_gust
+        name: Narazy gust
+        icon: mdi:weather-windy-variant
+      - entity: sensor.meteostanica_vonku_1_smer_vetra_text
+        name: Smer vetra
+        icon: mdi:compass
+      - entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
+        name: Uhol (stupne)
+        icon: mdi:compass-rose
+      - entity: sensor.meteostanica_vonku_1_sila_vetra_beaufort
+        name: Beaufort
+        icon: mdi:flag
+    - type: gauge
+      entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
+      name: Rychlost vetra
+      min: 0
+      max: 80
+      needle: true
+      severity:
+        green: 0
+        yellow: 20
+        red: 40
+      grid_options:
+        columns: 6
+  - type: grid
+    cards:
+    - type: heading
+      heading: Zrazky
+      icon: mdi:weather-rainy
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.vonku_meteostanica_vonku_1_zrazky_spolu
+        name: Zrazky spolu (kumulativne)
+        icon: mdi:cup-water
+      - entity: sensor.meteostanica_vonku_1_intenzita_zrazok_text
+        name: Intenzita
+        icon: mdi:weather-pouring
+      - entity: sensor.meteostanica_vonku_1_intenzita_zrazok
+        name: Intenzita mm/h
+        icon: mdi:weather-pouring
+      - entity: sensor.meteostanica_vonku_1_vlhkost_dazdoveho_senzora
+        name: Vlhkost dosticky
+        icon: mdi:water-percent
+    - type: heading
+      heading: Svetlo a UV
+      icon: mdi:white-balance-sunny
+      heading_style: subtitle
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_intenzita_svetla
+        name: Intenzita svetla
         icon: mdi:white-balance-sunny
-        entities:
-          - entity: sensor.vonkajsia_stanica_intenzita_svetla
-            name: Intenzita svetla
-            icon: mdi:white-balance-sunny
-          - entity: sensor.vonkajsia_stanica_uv_index
-            name: UV Index
-            icon: mdi:sun-wireless
-
-      - type: gauge
-        entity: sensor.vonkajsia_stanica_uv_index
+      - entity: sensor.meteostanica_vonku_1_uv_index
         name: UV Index
-        min: 0
-        max: 11
-        needle: true
-        severity:
-          green: 0
-          yellow: 6
-          red: 8
-
-  # ==========================================================================
-  # 2) GRAFY — priebehy v čase
-  # ==========================================================================
-  - title: Grafy
-    path: grafy
-    icon: mdi:chart-line
+        icon: mdi:sun-wireless
+    - type: gauge
+      entity: sensor.meteostanica_vonku_1_uv_index
+      name: UV Index
+      min: 0
+      max: 11
+      needle: true
+      severity:
+        green: 0
+        yellow: 6
+        red: 8
+      grid_options:
+        columns: 6
+- title: Grafy
+  path: grafy
+  type: sections
+  max_columns: 2
+  icon: mdi:chart-line
+  sections:
+  - type: grid
     cards:
-
-      - type: history-graph
-        title: Teplota 24h
-        hours_to_show: 24
-        entities:
-          - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-            name: Teplota
-          - entity: sensor.vonkajsia_stanica_pocitova_teplota
-            name: Pocitova
-          - entity: sensor.vonkajsia_stanica_rosny_bod
-            name: Rosny bod
-
-      - type: statistics-graph
-        title: Teplota min/max (30 dni)
-        days_to_show: 30
-        period: day
-        chart_type: line
-        stat_types:
-          - min
-          - mean
-          - max
-        entities:
-          - entity: sensor.vonkajsia_stanica_vonkajsia_teplota
-            name: Teplota
-
-      - type: entities
-        title: Atmosfericky tlak
+    - type: heading
+      heading: Teplota
+      icon: mdi:thermometer
+      heading_style: title
+    - type: history-graph
+      title: Teplota 24h
+      hours_to_show: 24
+      entities:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+        name: Teplota
+      - entity: sensor.meteostanica_vonku_1_pocitova_teplota
+        name: Pocitova
+      - entity: sensor.meteostanica_vonku_1_rosny_bod
+        name: Rosny bod
+      grid_options:
+        columns: full
+        rows: 4
+    - type: statistics-graph
+      title: Teplota min/max (30 dni)
+      days_to_show: 30
+      period: day
+      chart_type: line
+      stat_types:
+      - min
+      - mean
+      - max
+      entities:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+        name: Teplota
+      grid_options:
+        columns: full
+        rows: 4
+  - type: grid
+    cards:
+    - type: heading
+      heading: Tlak
+      icon: mdi:gauge
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
+        name: Tlak hladina mora
         icon: mdi:gauge
-        entities:
-          - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
-            name: Tlak hladina mora
-            icon: mdi:gauge
-          - entity: sensor.vonkajsia_stanica_absolutny_tlak
-            name: Absolutny tlak
-            icon: mdi:gauge-low
-          - entity: sensor.vonkajsia_stanica_tlakovy_trend
-            name: Tlakovy trend
-            icon: mdi:trending-down
-
-      - type: gauge
-        entity: sensor.vonkajsia_stanica_tlak_hladina_mora
-        name: Tlak MSL hPa
-        min: 970
-        max: 1040
-        needle: true
-        severity:
-          red: 970
-          yellow: 1000
-          green: 1013
-
-      - type: history-graph
-        title: Tlak 48h
-        hours_to_show: 48
-        entities:
-          - entity: sensor.vonkajsia_stanica_tlak_hladina_mora
-            name: MSL tlak
-          - entity: sensor.vonkajsia_stanica_tlakovy_trend
-            name: Trend hPa/h
-
-      - type: gauge
-        entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
-        name: Rychlost vetra kmh
-        min: 0
-        max: 80
-        needle: true
-        severity:
-          green: 0
-          yellow: 20
-          red: 40
-
-      - type: history-graph
-        title: Vietor 6h
-        hours_to_show: 6
-        entities:
-          - entity: sensor.vonkajsia_stanica_rychlost_vetra_priemer
-            name: Priemer
-          - entity: sensor.vonkajsia_stanica_rychlost_vetra_naraz_gust
-            name: Narazy
-          - entity: sensor.vonkajsia_stanica_smer_vetra_uhol
-            name: Smer (stupne)
-
-      # Funguje až vďaka `state_class: total_increasing` na "Zrážky spolu" —
-      # HA z kumulatívneho počítadla dopočíta denné prírastky.
-      - type: statistics-graph
-        title: Denne zrazky (14 dni)
-        days_to_show: 14
-        period: day
-        chart_type: bar
-        stat_types:
-          - change
-        entities:
-          - entity: sensor.vonkajsia_stanica_zrazky_spolu
-            name: Zrazky
-
-      - type: history-graph
-        title: Svetlo a UV 24h
-        hours_to_show: 24
-        entities:
-          - entity: sensor.vonkajsia_stanica_intenzita_svetla
-            name: Lux
-          - entity: sensor.vonkajsia_stanica_uv_index
-            name: UV Index
-
-  # ==========================================================================
-  # 3) DIAGNOSTIKA A OVLÁDANIE
-  # ==========================================================================
-  - title: Diagnostika
-    path: diagnostika
-    icon: mdi:tools
+      - entity: sensor.meteostanica_vonku_1_absolutny_tlak
+        name: Absolutny tlak
+        icon: mdi:gauge-low
+      - entity: sensor.meteostanica_vonku_1_tlakovy_trend
+        name: Tlakovy trend
+        icon: mdi:trending-down
+    - type: gauge
+      entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
+      name: Tlak MSL hPa
+      min: 970
+      max: 1040
+      needle: true
+      severity:
+        red: 970
+        yellow: 1000
+        green: 1013
+      grid_options:
+        columns: 6
+    - type: history-graph
+      title: Tlak 48h
+      hours_to_show: 48
+      entities:
+      - entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
+        name: MSL tlak
+      - entity: sensor.meteostanica_vonku_1_tlakovy_trend
+        name: Trend hPa/h
+      grid_options:
+        columns: full
+        rows: 4
+  - type: grid
     cards:
+    - type: heading
+      heading: Vietor
+      icon: mdi:weather-windy
+      heading_style: title
+    - type: history-graph
+      title: Vietor 6h
+      hours_to_show: 6
+      entities:
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
+        name: Priemer
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_naraz_gust
+        name: Narazy
+      - entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
+        name: Smer (stupne)
+      grid_options:
+        columns: full
+        rows: 4
+  - type: grid
+    cards:
+    - type: heading
+      heading: Zrazky
+      icon: mdi:weather-pouring
+      heading_style: title
+    - type: statistics-graph
+      title: Denne zrazky (14 dni)
+      days_to_show: 14
+      period: day
+      chart_type: bar
+      stat_types:
+      - change
+      entities:
+      - entity: sensor.vonku_meteostanica_vonku_1_zrazky_spolu
+        name: Zrazky
+      grid_options:
+        columns: full
+        rows: 4
+    - type: history-graph
+      title: Svetlo a UV 24h
+      hours_to_show: 24
+      entities:
+      - entity: sensor.meteostanica_vonku_1_intenzita_svetla
+        name: Lux
+      - entity: sensor.meteostanica_vonku_1_uv_index
+        name: UV Index
+      grid_options:
+        columns: full
+        rows: 4
+- title: Diagnostika
+  path: diagnostika
+  type: sections
+  max_columns: 3
+  icon: mdi:tools
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      heading: Ovladanie
+      icon: mdi:tune
+      heading_style: title
+    - type: markdown
+      grid_options:
+        columns: full
+      content: '### Ako preflashovat stanicu
 
-      - type: markdown
-        content: |
-          ### Ako preflashovať stanicu
 
-          Stanica je v deep sleep a hore býva len ~60 s. Aby sa dala aktualizovať:
+        Stanica je v deep sleep a hore byva len ~60 s. Aby sa dala aktualizovat:
 
-          1. Zapni **OTA Režim** nižšie (nastavenie prežije deep sleep).
-          2. Počkaj na najbližšie prebudenie — stanica ostane hore **3 minúty**.
-          3. Spusti OTA update; po ňom sa režim automaticky vypne.
 
-          Bez toho okno na upload zvyčajne nestihneš.
+        1. Zapni **OTA rezim** nizsie (nastavenie prezije deep sleep).
 
-      - type: entities
-        title: Ovladanie
-        icon: mdi:tune
-        state_color: true
-        entities:
-          - entity: switch.vonkajsia_stanica_ota_rezim_predlzene_budenie
-            name: OTA rezim (3 min hore)
-            icon: mdi:update
-          - entity: switch.vonkajsia_stanica_manualne_napajanie_senzorov
-            name: Manualne napajanie senzorov
-            icon: mdi:power-plug
-          - type: divider
-          - entity: switch.vonkajsia_stanica_vynutit_deep_sleep
-            name: Vynutit deep sleep
-            icon: mdi:sleep
-          - entity: switch.vonkajsia_stanica_restartovat_stanicu
-            name: Restartovat stanicu
-            icon: mdi:restart
-          - entity: switch.vonkajsia_stanica_reset_diagnostiky
-            name: Reset diagnostiky + zrazok
-            icon: mdi:restore
+        2. Pockaj na najblizsie prebudenie — stanica ostane hore **3 minuty**.
 
-      - type: entities
-        title: Prahy predikcie dazda
-        icon: mdi:sliders
-        entities:
-          # Pozn.: `pressure_threshold` má restore_value, takže na už nasadenom
-          # zariadení môže ostať stará hodnota -0.3. Pôvodné natvrdo zadané
-          # správanie zodpovedá -1.5.
-          - entity: number.vonkajsia_stanica_prah_poklesu_tlaku
-            name: Prah poklesu tlaku (hPa/h)
-          - entity: number.vonkajsia_stanica_prah_vlhkosti_pre_dazd
-            name: Prah vlhkosti pre dazd (%)
-
-      - type: entities
-        title: Bateria a napajanie
+        3. Spusti OTA update; po nom sa rezim automaticky vypne.'
+    - type: tile
+      entity: switch.meteostanica_vonku_1_ota_rezim_predlzene_budenie
+      name: OTA rezim
+      grid_options:
+        columns: 12
+      icon: mdi:update
+      features:
+      - type: toggle
+    - type: tile
+      entity: switch.meteostanica_vonku_1_manualne_napajanie_senzorov
+      name: Napajanie senzorov
+      grid_options:
+        columns: 6
+      icon: mdi:power-plug
+      features:
+      - type: toggle
+    - type: tile
+      entity: switch.meteostanica_vonku_1_vynutit_deep_sleep
+      name: Vynutit spanok
+      grid_options:
+        columns: 6
+      icon: mdi:sleep
+      features:
+      - type: toggle
+    - type: tile
+      entity: switch.meteostanica_vonku_1_restartovat_stanicu
+      name: Restart
+      grid_options:
+        columns: 6
+      icon: mdi:restart
+      features:
+      - type: toggle
+    - type: tile
+      entity: switch.meteostanica_vonku_1_reset_diagnostiky
+      name: Reset diagnostiky
+      grid_options:
+        columns: 6
+      icon: mdi:restore
+      features:
+      - type: toggle
+    - type: heading
+      heading: Prahy predikcie dazda
+      icon: mdi:sliders
+      heading_style: subtitle
+    - type: entities
+      entities:
+      - entity: number.meteostanica_vonku_1_prah_poklesu_tlaku
+        name: Prah poklesu tlaku (hPa/h)
+      - entity: number.meteostanica_vonku_1_prah_vlhkosti_pre_dazd
+        name: Prah vlhkosti pre dazd (%)
+  - type: grid
+    cards:
+    - type: heading
+      heading: Bateria
+      icon: mdi:battery
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_uroven_baterie
+        name: Uroven baterie
         icon: mdi:battery
-        entities:
-          - entity: sensor.vonkajsia_stanica_uroven_baterie
-            name: Uroven baterie
-            icon: mdi:battery
-          - entity: sensor.vonkajsia_stanica_napatie_baterie
-            name: Napatie baterie
-            icon: mdi:battery-charging
-          - entity: sensor.vonkajsia_stanica_rezim_stanice
-            name: Rezim spanku
-            icon: mdi:sleep
-
-      - type: gauge
-        entity: sensor.vonkajsia_stanica_uroven_baterie
-        name: Bateria percento
-        min: 0
-        max: 100
-        needle: true
-        severity:
-          red: 0
-          yellow: 20
-          green: 50
-
-      - type: history-graph
-        title: Bateria 7 dni
-        hours_to_show: 168
-        entities:
-          - entity: sensor.vonkajsia_stanica_uroven_baterie
-            name: Bateria
-
-      - type: entities
-        title: Pripojenie a beh
+      - entity: sensor.meteostanica_vonku_1_napatie_baterie
+        name: Napatie baterie
+        icon: mdi:battery-charging
+      - entity: sensor.meteostanica_vonku_1_rezim_stanice
+        name: Rezim spanku
+        icon: mdi:sleep
+    - type: gauge
+      entity: sensor.meteostanica_vonku_1_uroven_baterie
+      name: Bateria %
+      min: 0
+      max: 100
+      needle: true
+      severity:
+        red: 0
+        yellow: 20
+        green: 50
+      grid_options:
+        columns: 6
+    - type: history-graph
+      title: Bateria 7 dni
+      hours_to_show: 168
+      entities:
+      - entity: sensor.meteostanica_vonku_1_uroven_baterie
+        name: Bateria
+      grid_options:
+        columns: full
+        rows: 4
+  - type: grid
+    cards:
+    - type: heading
+      heading: Pripojenie a beh
+      icon: mdi:wifi
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_wifi_signal_dbm
+        name: WiFi signal dBm
         icon: mdi:wifi
-        entities:
-          - entity: sensor.vonkajsia_stanica_wifi_signal_dbm
-            name: WiFi signal dBm
-            icon: mdi:wifi
-          - entity: sensor.vonkajsia_stanica_kvalita_wifi
-            name: Kvalita WiFi
-            icon: mdi:wifi-strength-3
-          - entity: sensor.vonkajsia_stanica_wifi_zlyhania_za_sebou
-            name: WiFi zlyhania za sebou
-            icon: mdi:wifi-alert
-          - entity: sensor.vonkajsia_stanica_cas_behu
-            name: Cas behu
-            icon: mdi:timer
-          - entity: sensor.vonkajsia_stanica_pocet_bootov
-            name: Pocet bootov
-            icon: mdi:restart
-          - entity: sensor.vonkajsia_stanica_teplota_cpu
-            name: Teplota CPU
-            icon: mdi:chip
-
-      - type: entities
-        title: Zdravie senzorov
-        icon: mdi:heart-pulse
-        state_color: true
-        entities:
-          - entity: binary_sensor.vonkajsia_stanica_chyba_i2c_senzorov
-            name: Chyba I2C
-            icon: mdi:alert-circle
-          - entity: sensor.vonkajsia_stanica_chyby_senzorov
-            name: Pocet chyb senzorov
-            icon: mdi:counter
-          # Ak toto rastie, SHT41 vracia stále tú istú hodnotu — vlhkosť je "zaseknutá".
-          - entity: sensor.vonkajsia_stanica_zaseknuta_vlhkost_pocet
-            name: Zaseknuta vlhkost
-            icon: mdi:water-alert
-          - type: divider
-          # Záložný BME280 — ak sa jeho hodnoty rozchádzajú so SHT41, jeden z nich je mimo.
-          - entity: sensor.vonkajsia_stanica_teplota_bme280
-            name: Teplota BME280 (zaloha)
-            icon: mdi:thermometer
-          - entity: sensor.vonkajsia_stanica_vlhkost_bme280
-            name: Vlhkost BME280 (zaloha)
-            icon: mdi:water-percent
-
-      - type: history-graph
-        title: Porovnanie SHT41 vs BME280 (24h)
-        hours_to_show: 24
-        entities:
-          - entity: sensor.vonkajsia_stanica_vonkajsia_vlhkost
-            name: SHT41
-          - entity: sensor.vonkajsia_stanica_vlhkost_bme280
-            name: BME280
-
-      - type: entities
-        title: Surove napatia (kalibracia)
-        icon: mdi:sine-wave
-        entities:
-          # Podľa týchto sa nastavujú rain_calib_dry / rain_calib_wet v YAML.
-          - entity: sensor.vonkajsia_stanica_napatie_dazdoveho_senzora
-            name: Dazdovy senzor V
-            icon: mdi:water-outline
-          - entity: sensor.vonkajsia_stanica_napatie_veternej_ruze_debug
-            name: Veterna ruza V
-            icon: mdi:compass-outline
-          - entity: sensor.vonkajsia_stanica_smer_vetra_uhol
-            name: Smer vetra (uhol)
-            icon: mdi:compass-rose
-          - entity: sensor.vonkajsia_stanica_zrazky_tento_cyklus
-            name: Zrazky tento cyklus
-            icon: mdi:weather-pouring
+      - entity: sensor.meteostanica_vonku_1_kvalita_wifi
+        name: Kvalita WiFi
+        icon: mdi:wifi-strength-3
+      - entity: sensor.meteostanica_vonku_1_wifi_zlyhania_za_sebou
+        name: WiFi zlyhania za sebou
+        icon: mdi:wifi-alert
+      - entity: sensor.meteostanica_vonku_1_cas_behu
+        name: Cas behu
+        icon: mdi:timer
+      - entity: sensor.meteostanica_vonku_1_pocet_bootov
+        name: Pocet bootov
+        icon: mdi:restart
+      - entity: sensor.meteostanica_vonku_1_teplota_cpu
+        name: Teplota CPU
+        icon: mdi:chip
+  - type: grid
+    cards:
+    - type: heading
+      heading: Zdravie senzorov
+      icon: mdi:heart-pulse
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: binary_sensor.meteostanica_vonku_1_chyba_i2c_senzorov
+        name: Chyba I2C
+        icon: mdi:alert-circle
+      - entity: sensor.meteostanica_vonku_1_chyby_senzorov
+        name: Pocet chyb senzorov
+        icon: mdi:counter
+      - entity: sensor.vonku_meteostanica_vonku_1_zaseknuta_vlhkost_pocet
+        name: Zaseknuta vlhkost
+        icon: mdi:water-alert
+      state_color: true
+    - type: heading
+      heading: Zalozny BME280
+      icon: mdi:thermometer
+      heading_style: subtitle
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_teplota_bme280
+        name: Teplota BME280
+        icon: mdi:thermometer
+      - entity: sensor.meteostanica_vonku_1_vlhkost_bme280
+        name: Vlhkost BME280
+        icon: mdi:water-percent
+    - type: history-graph
+      title: SHT41 vs BME280 vlhkost (24h)
+      hours_to_show: 24
+      entities:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+        name: SHT41
+      - entity: sensor.meteostanica_vonku_1_vlhkost_bme280
+        name: BME280
+      grid_options:
+        columns: full
+        rows: 4
+  - type: grid
+    cards:
+    - type: heading
+      heading: Surove napatia (kalibracia)
+      icon: mdi:sine-wave
+      heading_style: title
+    - type: entities
+      entities:
+      - entity: sensor.meteostanica_vonku_1_napatie_dazdoveho_senzora
+        name: Dazdovy senzor V
+        icon: mdi:water-outline
+      - entity: sensor.meteostanica_vonku_1_napatie_veternej_ruze_debug
+        name: Veterna ruza V
+        icon: mdi:compass-outline
+      - entity: sensor.vonku_meteostanica_vonku_1_zrazky_tento_cyklus
+        name: Zrazky tento cyklus
+        icon: mdi:weather-pouring

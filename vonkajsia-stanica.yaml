@@ -617,6 +617,7 @@ sensor:
     lambda: 'return id(daily_rain_accumulator);'
   - platform: template
     name: "Zaseknutá vlhkosť (počet)"
+    id: humidity_stuck_sensor
     entity_category: diagnostic
     accuracy_decimals: 0
     update_interval: never
@@ -1142,6 +1143,7 @@ script:
       - component.update: weather_forecast_text
       - component.update: station_mode_text
       - component.update: rain_cumulative
+      - component.update: humidity_stuck_sensor
       # 4) až úplne na záver prepíš referenciu pre porovnanie v ĎALŠOM cykle
       - lambda: |-
           if (id(sht41_humidity).has_state() && !isnan(id(sht41_humidity).state))
