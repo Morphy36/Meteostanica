@@ -846,7 +846,9 @@ views:
       grid_options:
         columns: full
     - type: custom:windrose-card
-      title: Ruzica vetra
+      title: Ruzica vetra (7 dni)
+      data_period:
+        period_back: -7d
       windspeed_bar_location: bottom
       wind_direction_entity:
         entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
