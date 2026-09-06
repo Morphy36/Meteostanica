@@ -233,8 +233,13 @@ sensor:
         then:
           - lambda: |-
               float h = ${altitude_meters};
-              float t = id(sht41_temperature).has_state() ? id(sht41_temperature).state :
-                        (id(bme280_temperature).has_state() ? id(bme280_temperature).state : 15.0f);
+              // Teplotu pre prepočet na hladinu mora riadi SHT41; BME280 je len záloha,
+              // keď SHT41 nemeria. has_state() je true aj pre NAN, preto isnan().
+              float t = 15.0f;
+              if (id(sht41_temperature).has_state() && !isnan(id(sht41_temperature).state))
+                t = id(sht41_temperature).state;
+              else if (id(bme280_temperature).has_state() && !isnan(id(bme280_temperature).state))
+                t = id(bme280_temperature).state;
               float msl = x * pow(1.0f - (0.0065f * h) / (t + 0.0065f * h + 273.15f), -5.257f);
               id(msl_pressure).publish_state(msl);
           - script.execute: update_pressure_trend

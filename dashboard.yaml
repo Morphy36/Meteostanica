@@ -1,20 +1,45 @@
-# Lovelace dashboard pre meteostanicu — nasadený v HA ako "Meteostanica ESP"
-# (url_path: meteostanica-esp, storage mode).
+# Lovelace dashboard "Meteostanica ESP" (url_path: meteostanica-esp, storage mode).
 #
-# POZOR na entity ID: zariadenie je v Home Assistante premenované na
-# "MeteoStanica - Vonku 1", takže entity majú prefix `meteostanica_vonku_1_`,
-# nie `vonkajsia_stanica_` odvodený z `friendly_name` v vonkajsia-stanica.yaml.
-# Novšie entity (zrazky_spolu, zrazky_tento_cyklus, zaseknuta_vlhkost_pocet)
-# dostali od HA navyše prefix `vonku_`. Pri čistej inštalácii budú ID iné —
-# vygeneruj si ich z /api/states, needituj ručne.
+# ENTITY ID: zariadenie je v HA premenované na "MeteoStanica - Vonku 1", preto prefix
+# `meteostanica_vonku_1_`; novšie entity majú navyše `vonku_`. Pri čistej inštalácii
+# budú iné — generuj ich z /api/states, needituj ručne.
 #
-# Tento súbor je záloha; zdroj pravdy je storage-mode dashboard v HA.
+# VYŽADUJE HACS karty: apexcharts-card, mushroom, windrose-card.
+#
+# FAREBNÉ GRADIENTY: apexcharts aplikuje per-series `color_threshold` LEN keď je na
+# karte `experimental: {color_threshold: true}` — bez toho sa ticho ignoruje.
+# Škála ide od studenej modrej po horúcu červenú (teplota), sucho oranžová -> mokro
+# modrá (vlhkosť), pokoj zelená -> víchor fialová (vietor).
+#
+# MERANIA RIADI SHT41. BME280 je len záložná teplota pre prepočet tlaku na hladinu
+# mora; jeho vlhkosť sa nepoužíva nikde a slúži len na porovnanie v Diagnostike.
 views:
 - title: Prehlad
   path: prehlad
   type: sections
   max_columns: 3
   icon: mdi:weather-partly-cloudy
+  badges:
+  - type: entity
+    entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+    show_name: true
+    state_content:
+    - state
+  - type: entity
+    entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+    show_name: true
+  - type: entity
+    entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
+    show_name: true
+  - type: entity
+    entity: sensor.meteostanica_vonku_1_uroven_baterie
+    show_name: true
+  - type: entity
+    entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+    name: Data
+    show_name: true
+    state_content:
+    - last_changed
   sections:
   - type: grid
     cards:
@@ -27,59 +52,328 @@ views:
         columns: full
       content: '## {{ states(''sensor.meteostanica_vonku_1_predpoved_pocasia'') }}
 
-        {{ states(''sensor.meteostanica_vonku_1_odporucanie_oblecenia'') }}
-
-
-        {% set t = states.sensor.meteostanica_vonku_1_vonkajsia_teplota %}{% if t %}*Data spred {{ relative_time(t.last_changed)
-        }} — stanica vacsinu casu spi.*{% endif %}'
-    - type: tile
+        {{ states(''sensor.meteostanica_vonku_1_odporucanie_oblecenia'') }}'
+    - type: custom:mushroom-template-card
       entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
-      name: Teplota
-      grid_options:
-        columns: 6
+      primary: Teplota
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_vonkajsia_teplota'') | round(1) }} °C'
       icon: mdi:thermometer
-    - type: tile
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_vonkajsia_teplota'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 0 %}blue
+
+        {% elif v < 8 %}light-blue
+
+        {% elif v < 16 %}teal
+
+        {% elif v < 22 %}green
+
+        {% elif v < 28 %}orange
+
+        {% elif v < 34 %}deep-orange
+
+        {% elif v < 99 %}red
+
+        {% else %}red{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 6
+    - type: custom:mushroom-template-card
       entity: sensor.meteostanica_vonku_1_pocitova_teplota
-      name: Pocitovo
-      grid_options:
-        columns: 6
+      primary: Pocitovo
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_pocitova_teplota'') | round(1) }} °C'
       icon: mdi:thermometer-lines
-    - type: tile
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_vonkajsia_teplota'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 0 %}blue
+
+        {% elif v < 8 %}light-blue
+
+        {% elif v < 16 %}teal
+
+        {% elif v < 22 %}green
+
+        {% elif v < 28 %}orange
+
+        {% elif v < 34 %}deep-orange
+
+        {% elif v < 99 %}red
+
+        {% else %}red{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 6
+    - type: custom:mushroom-template-card
       entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
-      name: Vlhkost
-      grid_options:
-        columns: 6
+      primary: Vlhkost
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_vonkajsia_vlhkost'') | round(1) }} %'
       icon: mdi:water-percent
-    - type: tile
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_vonkajsia_vlhkost'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 30 %}orange
+
+        {% elif v < 50 %}amber
+
+        {% elif v < 70 %}light-green
+
+        {% elif v < 85 %}cyan
+
+        {% elif v < 101 %}blue
+
+        {% else %}blue{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 6
+    - type: custom:mushroom-template-card
+      entity: sensor.meteostanica_vonku_1_rosny_bod
+      primary: Rosny bod
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_rosny_bod'') | round(1) }} °C'
+      icon: mdi:thermometer-water
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_vonkajsia_teplota'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 0 %}blue
+
+        {% elif v < 8 %}light-blue
+
+        {% elif v < 16 %}teal
+
+        {% elif v < 22 %}green
+
+        {% elif v < 28 %}orange
+
+        {% elif v < 34 %}deep-orange
+
+        {% elif v < 99 %}red
+
+        {% else %}red{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 6
+    - type: custom:mushroom-template-card
       entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
-      name: Tlak MSL
-      grid_options:
-        columns: 6
+      primary: Tlak MSL
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_tlak_hladina_mora'') | round(1) }} hPa'
       icon: mdi:gauge
-    - type: tile
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_tlak_hladina_mora'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 1000 %}red
+
+        {% elif v < 1010 %}orange
+
+        {% elif v < 1020 %}green
+
+        {% elif v < 9999 %}blue
+
+        {% else %}blue{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 6
+    - type: custom:mushroom-template-card
       entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
-      name: Vietor
-      grid_options:
-        columns: 6
+      primary: Vietor
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_rychlost_vetra_priemer'') | round(1) }} km/h'
       icon: mdi:weather-windy
-    - type: tile
-      entity: sensor.meteostanica_vonku_1_smer_vetra_text
-      name: Smer
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_rychlost_vetra_priemer'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 12 %}green
+
+        {% elif v < 20 %}light-green
+
+        {% elif v < 30 %}amber
+
+        {% elif v < 45 %}orange
+
+        {% elif v < 999 %}red
+
+        {% else %}red{% endif %}'
+      tap_action:
+        action: more-info
       grid_options:
         columns: 6
-      icon: mdi:compass
-    - type: tile
+    - type: custom:mushroom-template-card
       entity: sensor.vonku_meteostanica_vonku_1_zrazky_spolu
-      name: Zrazky spolu
-      grid_options:
-        columns: 6
+      primary: Zrazky
+      secondary: '{{ states(''sensor.vonku_meteostanica_vonku_1_zrazky_spolu'') | round(1) }} mm'
       icon: mdi:cup-water
-    - type: tile
-      entity: sensor.meteostanica_vonku_1_uroven_baterie
-      name: Bateria
+      icon_color: '{% set v = states(''sensor.vonku_meteostanica_vonku_1_zrazky_spolu'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 0.1 %}grey
+
+        {% elif v < 5 %}light-blue
+
+        {% elif v < 20 %}blue
+
+        {% elif v < 9999 %}indigo
+
+        {% else %}indigo{% endif %}'
+      tap_action:
+        action: more-info
       grid_options:
         columns: 6
-      icon: mdi:battery
+    - type: custom:mushroom-template-card
+      entity: sensor.meteostanica_vonku_1_uv_index
+      primary: UV Index
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_uv_index'') | round(1) }}'
+      icon: mdi:sun-wireless
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_uv_index'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 3 %}green
+
+        {% elif v < 6 %}amber
+
+        {% elif v < 8 %}orange
+
+        {% elif v < 99 %}purple
+
+        {% else %}purple{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 6
+  - type: grid
+    cards:
+    - type: heading
+      heading: Teplota
+      icon: mdi:thermometer
+      heading_style: title
+    - type: custom:apexcharts-card
+      graph_span: 24h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Teplota 24 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+        name: Teplota
+        type: line
+        stroke_width: 3
+        float_precision: 1
+        color_threshold:
+        - value: -25
+          color: '#311b92'
+        - value: -15
+          color: '#3f51b5'
+        - value: -5
+          color: '#2196f3'
+        - value: 0
+          color: '#00bcd4'
+        - value: 8
+          color: '#26a69a'
+        - value: 15
+          color: '#66bb6a'
+        - value: 21
+          color: '#d4e157'
+        - value: 26
+          color: '#ffc107'
+        - value: 31
+          color: '#ff9800'
+        - value: 36
+          color: '#f4511e'
+        - value: 40
+          color: '#b71c1c'
+      - entity: sensor.meteostanica_vonku_1_rosny_bod
+        name: Rosny bod
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: -25
+          color: '#311b92'
+        - value: -15
+          color: '#3f51b5'
+        - value: -5
+          color: '#2196f3'
+        - value: 0
+          color: '#00bcd4'
+        - value: 8
+          color: '#26a69a'
+        - value: 15
+          color: '#66bb6a'
+        - value: 21
+          color: '#d4e157'
+        - value: 26
+          color: '#ffc107'
+        - value: 31
+          color: '#ff9800'
+        - value: 36
+          color: '#f4511e'
+        - value: 40
+          color: '#b71c1c'
+        opacity: 0.5
+      apex_config:
+        chart:
+          height: 190
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: true
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
+    - type: custom:apexcharts-card
+      graph_span: 24h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Vlhkost 24 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+        name: Vlhkost SHT41
+        type: line
+        stroke_width: 3
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#ff6f00'
+        - value: 30
+          color: '#ffb300'
+        - value: 50
+          color: '#9ccc65'
+        - value: 70
+          color: '#26c6da'
+        - value: 85
+          color: '#1e88e5'
+        - value: 100
+          color: '#0d47a1'
+      apex_config:
+        chart:
+          height: 170
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
   - type: grid
     cards:
     - type: heading
@@ -125,132 +419,80 @@ views:
   - type: grid
     cards:
     - type: heading
-      heading: Teplota a vlhkost
-      icon: mdi:thermometer
-      heading_style: title
-    - type: entities
-      entities:
-      - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
-        name: Teplota
-        icon: mdi:thermometer
-      - entity: sensor.meteostanica_vonku_1_pocitova_teplota
-        name: Pocitova teplota
-        icon: mdi:thermometer-lines
-      - entity: sensor.meteostanica_vonku_1_index_tepelneho_komfortu
-        name: Index komfortu
-        icon: mdi:thermometer-check
-      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
-        name: Vlhkost
-        icon: mdi:water-percent
-      - entity: sensor.meteostanica_vonku_1_rosny_bod
-        name: Rosny bod
-        icon: mdi:thermometer-water
-      - entity: sensor.meteostanica_vonku_1_absolutna_vlhkost
-        name: Absolutna vlhkost
-        icon: mdi:water
-    - type: gauge
-      entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
-      name: Teplota
-      min: -20
-      max: 45
-      needle: true
-      severity:
-        green: -20
-        yellow: 28
-        red: 36
-      grid_options:
-        columns: 6
-    - type: gauge
-      entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
-      name: Vlhkost
-      min: 0
-      max: 100
-      needle: true
-      severity:
-        green: 0
-        yellow: 70
-        red: 85
-      grid_options:
-        columns: 6
-  - type: grid
-    cards:
-    - type: heading
-      heading: Vietor
+      heading: Vietor a zrazky
       icon: mdi:weather-windy
       heading_style: title
+    - type: custom:apexcharts-card
+      graph_span: 12h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Vietor 12 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
+        name: Priemer
+        type: line
+        stroke_width: 3
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#43a047'
+        - value: 12
+          color: '#c0ca33'
+        - value: 20
+          color: '#ffb300'
+        - value: 30
+          color: '#fb8c00'
+        - value: 45
+          color: '#e53935'
+        - value: 65
+          color: '#6a1b9a'
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_naraz_gust
+        name: Naraz
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#43a047'
+        - value: 12
+          color: '#c0ca33'
+        - value: 20
+          color: '#ffb300'
+        - value: 30
+          color: '#fb8c00'
+        - value: 45
+          color: '#e53935'
+        - value: 65
+          color: '#6a1b9a'
+      apex_config:
+        chart:
+          height: 180
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: true
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
     - type: entities
       entities:
-      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
-        name: Rychlost priemer
-        icon: mdi:weather-windy
-      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_naraz_gust
-        name: Narazy gust
-        icon: mdi:weather-windy-variant
       - entity: sensor.meteostanica_vonku_1_smer_vetra_text
         name: Smer vetra
         icon: mdi:compass
-      - entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
-        name: Uhol (stupne)
-        icon: mdi:compass-rose
       - entity: sensor.meteostanica_vonku_1_sila_vetra_beaufort
         name: Beaufort
         icon: mdi:flag
-    - type: gauge
-      entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
-      name: Rychlost vetra
-      min: 0
-      max: 80
-      needle: true
-      severity:
-        green: 0
-        yellow: 20
-        red: 40
-      grid_options:
-        columns: 6
-  - type: grid
-    cards:
-    - type: heading
-      heading: Zrazky
-      icon: mdi:weather-rainy
-      heading_style: title
-    - type: entities
-      entities:
-      - entity: sensor.vonku_meteostanica_vonku_1_zrazky_spolu
-        name: Zrazky spolu (kumulativne)
-        icon: mdi:cup-water
       - entity: sensor.meteostanica_vonku_1_intenzita_zrazok_text
-        name: Intenzita
-        icon: mdi:weather-pouring
-      - entity: sensor.meteostanica_vonku_1_intenzita_zrazok
-        name: Intenzita mm/h
+        name: Intenzita zrazok
         icon: mdi:weather-pouring
       - entity: sensor.meteostanica_vonku_1_vlhkost_dazdoveho_senzora
         name: Vlhkost dosticky
         icon: mdi:water-percent
-    - type: heading
-      heading: Svetlo a UV
-      icon: mdi:white-balance-sunny
-      heading_style: subtitle
-    - type: entities
-      entities:
-      - entity: sensor.meteostanica_vonku_1_intenzita_svetla
-        name: Intenzita svetla
-        icon: mdi:white-balance-sunny
-      - entity: sensor.meteostanica_vonku_1_uv_index
-        name: UV Index
-        icon: mdi:sun-wireless
-    - type: gauge
-      entity: sensor.meteostanica_vonku_1_uv_index
-      name: UV Index
-      min: 0
-      max: 11
-      needle: true
-      severity:
-        green: 0
-        yellow: 6
-        red: 8
-      grid_options:
-        columns: 6
 - title: Grafy
   path: grafy
   type: sections
@@ -263,21 +505,57 @@ views:
       heading: Teplota
       icon: mdi:thermometer
       heading_style: title
-    - type: history-graph
-      title: Teplota 24h
-      hours_to_show: 24
-      entities:
+    - type: custom:apexcharts-card
+      graph_span: 7d
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Teplota 7 dni
+        show_states: true
+        colorize_states: true
+      series:
       - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
         name: Teplota
-      - entity: sensor.meteostanica_vonku_1_pocitova_teplota
-        name: Pocitova
-      - entity: sensor.meteostanica_vonku_1_rosny_bod
-        name: Rosny bod
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: -25
+          color: '#311b92'
+        - value: -15
+          color: '#3f51b5'
+        - value: -5
+          color: '#2196f3'
+        - value: 0
+          color: '#00bcd4'
+        - value: 8
+          color: '#26a69a'
+        - value: 15
+          color: '#66bb6a'
+        - value: 21
+          color: '#d4e157'
+        - value: 26
+          color: '#ffc107'
+        - value: 31
+          color: '#ff9800'
+        - value: 36
+          color: '#f4511e'
+        - value: 40
+          color: '#b71c1c'
+      apex_config:
+        chart:
+          height: 220
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
       grid_options:
         columns: full
-        rows: 4
     - type: statistics-graph
-      title: Teplota min/max (30 dni)
+      title: Teplota min / priemer / max (30 dni)
       days_to_show: 30
       period: day
       chart_type: line
@@ -294,62 +572,291 @@ views:
   - type: grid
     cards:
     - type: heading
+      heading: Vlhkost a rosny bod
+      icon: mdi:water-percent
+      heading_style: title
+    - type: custom:apexcharts-card
+      graph_span: 7d
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Vlhkost 7 dni
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+        name: Vlhkost
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#ff6f00'
+        - value: 30
+          color: '#ffb300'
+        - value: 50
+          color: '#9ccc65'
+        - value: 70
+          color: '#26c6da'
+        - value: 85
+          color: '#1e88e5'
+        - value: 100
+          color: '#0d47a1'
+      apex_config:
+        chart:
+          height: 200
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
+    - type: custom:apexcharts-card
+      graph_span: 7d
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Rosny bod 7 dni
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_rosny_bod
+        name: Rosny bod
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: -25
+          color: '#311b92'
+        - value: -15
+          color: '#3f51b5'
+        - value: -5
+          color: '#2196f3'
+        - value: 0
+          color: '#00bcd4'
+        - value: 8
+          color: '#26a69a'
+        - value: 15
+          color: '#66bb6a'
+        - value: 21
+          color: '#d4e157'
+        - value: 26
+          color: '#ffc107'
+        - value: 31
+          color: '#ff9800'
+        - value: 36
+          color: '#f4511e'
+        - value: 40
+          color: '#b71c1c'
+      apex_config:
+        chart:
+          height: 200
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
+    - type: custom:apexcharts-card
+      graph_span: 7d
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Absolutna vlhkost 7 dni
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_absolutna_vlhkost
+        name: g/m3
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#ff6f00'
+        - value: 30
+          color: '#ffb300'
+        - value: 50
+          color: '#9ccc65'
+        - value: 70
+          color: '#26c6da'
+        - value: 85
+          color: '#1e88e5'
+        - value: 100
+          color: '#0d47a1'
+      apex_config:
+        chart:
+          height: 180
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
+  - type: grid
+    cards:
+    - type: heading
       heading: Tlak
       icon: mdi:gauge
       heading_style: title
-    - type: entities
-      entities:
+    - type: custom:apexcharts-card
+      graph_span: 48h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Tlak MSL 48 h
+        show_states: true
+        colorize_states: true
+      series:
       - entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
-        name: Tlak hladina mora
-        icon: mdi:gauge
-      - entity: sensor.meteostanica_vonku_1_absolutny_tlak
-        name: Absolutny tlak
-        icon: mdi:gauge-low
-      - entity: sensor.meteostanica_vonku_1_tlakovy_trend
-        name: Tlakovy trend
-        icon: mdi:trending-down
-    - type: gauge
-      entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
-      name: Tlak MSL hPa
-      min: 970
-      max: 1040
-      needle: true
-      severity:
-        red: 970
-        yellow: 1000
-        green: 1013
-      grid_options:
-        columns: 6
-    - type: history-graph
-      title: Tlak 48h
-      hours_to_show: 48
-      entities:
-      - entity: sensor.meteostanica_vonku_1_tlak_hladina_mora
-        name: MSL tlak
-      - entity: sensor.meteostanica_vonku_1_tlakovy_trend
-        name: Trend hPa/h
+        name: MSL
+        type: line
+        stroke_width: 3
+        float_precision: 1
+        color_threshold:
+        - value: 970
+          color: '#e53935'
+        - value: 995
+          color: '#fb8c00'
+        - value: 1008
+          color: '#ffc107'
+        - value: 1016
+          color: '#43a047'
+        - value: 1032
+          color: '#1e88e5'
+      apex_config:
+        chart:
+          height: 200
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
       grid_options:
         columns: full
-        rows: 4
+    - type: custom:apexcharts-card
+      graph_span: 48h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Tlakovy trend 48 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_tlakovy_trend
+        name: hPa/h
+        type: line
+        stroke_width: 2
+        float_precision: 2
+        color_threshold:
+        - value: -5
+          color: '#e53935'
+        - value: -1
+          color: '#fb8c00'
+        - value: 0
+          color: '#ffc107'
+        - value: 1
+          color: '#9ccc65'
+        - value: 5
+          color: '#43a047'
+      apex_config:
+        chart:
+          height: 170
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
   - type: grid
     cards:
     - type: heading
       heading: Vietor
       icon: mdi:weather-windy
       heading_style: title
-    - type: history-graph
-      title: Vietor 6h
-      hours_to_show: 6
-      entities:
+    - type: custom:apexcharts-card
+      graph_span: 48h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Vietor 48 h
+        show_states: true
+        colorize_states: true
+      series:
       - entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
         name: Priemer
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#43a047'
+        - value: 12
+          color: '#c0ca33'
+        - value: 20
+          color: '#ffb300'
+        - value: 30
+          color: '#fb8c00'
+        - value: 45
+          color: '#e53935'
+        - value: 65
+          color: '#6a1b9a'
       - entity: sensor.meteostanica_vonku_1_rychlost_vetra_naraz_gust
-        name: Narazy
-      - entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
-        name: Smer (stupne)
+        name: Naraz
+        type: line
+        stroke_width: 1
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#43a047'
+        - value: 12
+          color: '#c0ca33'
+        - value: 20
+          color: '#ffb300'
+        - value: 30
+          color: '#fb8c00'
+        - value: 45
+          color: '#e53935'
+        - value: 65
+          color: '#6a1b9a'
+      apex_config:
+        chart:
+          height: 200
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: true
+        stroke:
+          curve: smooth
       grid_options:
         columns: full
-        rows: 4
+    - type: custom:windrose-card
+      title: Ruzica vetra
+      windspeed_bar_location: bottom
+      wind_direction_entity:
+        entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
+      windspeed_entities:
+      - entity: sensor.meteostanica_vonku_1_rychlost_vetra_priemer
+        name: Vietor
+        speed_unit: auto
+      grid_options:
+        columns: full
+        rows: 8
   - type: grid
     cards:
     - type: heading
@@ -357,8 +864,8 @@ views:
       icon: mdi:weather-pouring
       heading_style: title
     - type: statistics-graph
-      title: Denne zrazky (14 dni)
-      days_to_show: 14
+      title: Denne zrazky (30 dni)
+      days_to_show: 30
       period: day
       chart_type: bar
       stat_types:
@@ -369,17 +876,123 @@ views:
       grid_options:
         columns: full
         rows: 4
-    - type: history-graph
-      title: Svetlo a UV 24h
-      hours_to_show: 24
-      entities:
-      - entity: sensor.meteostanica_vonku_1_intenzita_svetla
-        name: Lux
-      - entity: sensor.meteostanica_vonku_1_uv_index
-        name: UV Index
+    - type: custom:apexcharts-card
+      graph_span: 48h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Intenzita zrazok 48 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_intenzita_zrazok
+        name: mm/h
+        type: area
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#90a4ae'
+        - value: 2.5
+          color: '#4fc3f7'
+        - value: 7.5
+          color: '#29b6f6'
+        - value: 15
+          color: '#1e88e5'
+        - value: 30
+          color: '#3949ab'
+      apex_config:
+        chart:
+          height: 180
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
       grid_options:
         columns: full
-        rows: 4
+  - type: grid
+    cards:
+    - type: heading
+      heading: Svetlo a UV
+      icon: mdi:white-balance-sunny
+      heading_style: title
+    - type: custom:apexcharts-card
+      graph_span: 48h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Osvetlenie 48 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_intenzita_svetla
+        name: lx
+        type: area
+        stroke_width: 2
+        float_precision: 0
+        color_threshold:
+        - value: 0
+          color: '#37474f'
+        - value: 500
+          color: '#5c6bc0'
+        - value: 5000
+          color: '#26c6da'
+        - value: 20000
+          color: '#ffd54f'
+        - value: 80000
+          color: '#ffa000'
+      apex_config:
+        chart:
+          height: 190
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
+    - type: custom:apexcharts-card
+      graph_span: 48h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: UV index 48 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_uv_index
+        name: UVI
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#43a047'
+        - value: 3
+          color: '#ffc107'
+        - value: 6
+          color: '#fb8c00'
+        - value: 8
+          color: '#e53935'
+        - value: 11
+          color: '#8e24aa'
+      apex_config:
+        chart:
+          height: 170
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
 - title: Diagnostika
   path: diagnostika
   type: sections
@@ -398,52 +1011,52 @@ views:
       content: '### Ako preflashovat stanicu
 
 
-        Stanica je v deep sleep a hore byva len ~60 s. Aby sa dala aktualizovat:
+        Stanica je v deep sleep a hore byva len ~60 s.
 
 
-        1. Zapni **OTA rezim** nizsie (nastavenie prezije deep sleep).
+        1. Zapni **OTA rezim** nizsie (prezije deep sleep).
 
-        2. Pockaj na najblizsie prebudenie — stanica ostane hore **3 minuty**.
+        2. Pockaj na najblizsie prebudenie — ostane hore **3 minuty**.
 
-        3. Spusti OTA update; po nom sa rezim automaticky vypne.'
+        3. Spusti OTA update; potom sa rezim sam vypne.'
     - type: tile
       entity: switch.meteostanica_vonku_1_ota_rezim_predlzene_budenie
       name: OTA rezim
+      icon: mdi:update
       grid_options:
         columns: 12
-      icon: mdi:update
       features:
       - type: toggle
     - type: tile
       entity: switch.meteostanica_vonku_1_manualne_napajanie_senzorov
       name: Napajanie senzorov
+      icon: mdi:power-plug
       grid_options:
         columns: 6
-      icon: mdi:power-plug
       features:
       - type: toggle
     - type: tile
       entity: switch.meteostanica_vonku_1_vynutit_deep_sleep
-      name: Vynutit spanok
+      name: Uspat teraz
+      icon: mdi:sleep
       grid_options:
         columns: 6
-      icon: mdi:sleep
       features:
       - type: toggle
     - type: tile
       entity: switch.meteostanica_vonku_1_restartovat_stanicu
       name: Restart
+      icon: mdi:restart
       grid_options:
         columns: 6
-      icon: mdi:restart
       features:
       - type: toggle
     - type: tile
       entity: switch.meteostanica_vonku_1_reset_diagnostiky
-      name: Reset diagnostiky
+      name: Reset diagnostiky + zrazok
+      icon: mdi:restore
       grid_options:
         columns: 6
-      icon: mdi:restore
       features:
       - type: toggle
     - type: heading
@@ -462,49 +1075,118 @@ views:
       heading: Bateria
       icon: mdi:battery
       heading_style: title
+    - type: custom:mushroom-template-card
+      entity: sensor.meteostanica_vonku_1_uroven_baterie
+      primary: Bateria
+      secondary: '{{ states(''sensor.meteostanica_vonku_1_uroven_baterie'') | round(1) }} %'
+      icon: mdi:battery
+      icon_color: '{% set v = states(''sensor.meteostanica_vonku_1_uroven_baterie'') | float(-999) %}
+
+        {% if v == -999 %}disabled
+
+        {% elif v < 15 %}red
+
+        {% elif v < 35 %}orange
+
+        {% elif v < 60 %}amber
+
+        {% elif v < 101 %}green
+
+        {% else %}green{% endif %}'
+      tap_action:
+        action: more-info
+      grid_options:
+        columns: 12
+    - type: custom:apexcharts-card
+      graph_span: 14d
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: Bateria 14 dni
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_uroven_baterie
+        name: '%'
+        type: line
+        stroke_width: 2
+        float_precision: 0
+        color_threshold:
+        - value: 0
+          color: '#e53935'
+        - value: 15
+          color: '#fb8c00'
+        - value: 35
+          color: '#ffc107'
+        - value: 60
+          color: '#9ccc65'
+        - value: 85
+          color: '#43a047'
+      apex_config:
+        chart:
+          height: 190
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
     - type: entities
       entities:
-      - entity: sensor.meteostanica_vonku_1_uroven_baterie
-        name: Uroven baterie
-        icon: mdi:battery
       - entity: sensor.meteostanica_vonku_1_napatie_baterie
-        name: Napatie baterie
+        name: Napatie
         icon: mdi:battery-charging
       - entity: sensor.meteostanica_vonku_1_rezim_stanice
         name: Rezim spanku
         icon: mdi:sleep
-    - type: gauge
-      entity: sensor.meteostanica_vonku_1_uroven_baterie
-      name: Bateria %
-      min: 0
-      max: 100
-      needle: true
-      severity:
-        red: 0
-        yellow: 20
-        green: 50
-      grid_options:
-        columns: 6
-    - type: history-graph
-      title: Bateria 7 dni
-      hours_to_show: 168
-      entities:
-      - entity: sensor.meteostanica_vonku_1_uroven_baterie
-        name: Bateria
-      grid_options:
-        columns: full
-        rows: 4
   - type: grid
     cards:
     - type: heading
       heading: Pripojenie a beh
       icon: mdi:wifi
       heading_style: title
+    - type: custom:apexcharts-card
+      graph_span: 24h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: WiFi signal 24 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_wifi_signal_dbm
+        name: dBm
+        type: line
+        stroke_width: 2
+        float_precision: 0
+        color_threshold:
+        - value: -95
+          color: '#e53935'
+        - value: -85
+          color: '#fb8c00'
+        - value: -75
+          color: '#ffc107'
+        - value: -65
+          color: '#9ccc65'
+        - value: -50
+          color: '#43a047'
+      apex_config:
+        chart:
+          height: 170
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: false
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
     - type: entities
       entities:
-      - entity: sensor.meteostanica_vonku_1_wifi_signal_dbm
-        name: WiFi signal dBm
-        icon: mdi:wifi
       - entity: sensor.meteostanica_vonku_1_kvalita_wifi
         name: Kvalita WiFi
         icon: mdi:wifi-strength-3
@@ -532,35 +1214,124 @@ views:
         name: Chyba I2C
         icon: mdi:alert-circle
       - entity: sensor.meteostanica_vonku_1_chyby_senzorov
-        name: Pocet chyb senzorov
+        name: Pocet chyb
         icon: mdi:counter
       - entity: sensor.vonku_meteostanica_vonku_1_zaseknuta_vlhkost_pocet
         name: Zaseknuta vlhkost
         icon: mdi:water-alert
       state_color: true
     - type: heading
-      heading: Zalozny BME280
-      icon: mdi:thermometer
+      heading: BME280 — len referencia
+      icon: mdi:information-outline
       heading_style: subtitle
-    - type: entities
-      entities:
-      - entity: sensor.meteostanica_vonku_1_teplota_bme280
-        name: Teplota BME280
-        icon: mdi:thermometer
-      - entity: sensor.meteostanica_vonku_1_vlhkost_bme280
-        name: Vlhkost BME280
-        icon: mdi:water-percent
-    - type: history-graph
-      title: SHT41 vs BME280 vlhkost (24h)
-      hours_to_show: 24
-      entities:
-      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
-        name: SHT41
-      - entity: sensor.meteostanica_vonku_1_vlhkost_bme280
-        name: BME280
+    - type: markdown
       grid_options:
         columns: full
-        rows: 4
+      text_only: true
+      content: '*Vsetky merania a vypocty riadi **SHT41**. BME280 sa pouziva len ako zaloha teploty pre prepocet
+        tlaku na hladinu mora; jeho vlhkost sa nepouziva nikde — sluzi len na porovnanie nizsie.*'
+    - type: custom:apexcharts-card
+      graph_span: 24h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: SHT41 vs BME280 — vlhkost 24 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_vlhkost
+        name: SHT41 (riadiaci)
+        type: line
+        stroke_width: 3
+        float_precision: 1
+        color_threshold:
+        - value: 0
+          color: '#ff6f00'
+        - value: 30
+          color: '#ffb300'
+        - value: 50
+          color: '#9ccc65'
+        - value: 70
+          color: '#26c6da'
+        - value: 85
+          color: '#1e88e5'
+        - value: 100
+          color: '#0d47a1'
+      - entity: sensor.meteostanica_vonku_1_vlhkost_bme280
+        name: BME280 (referencia)
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color: '#9e9e9e'
+        opacity: 0.6
+      apex_config:
+        chart:
+          height: 190
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: true
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
+    - type: custom:apexcharts-card
+      graph_span: 24h
+      experimental:
+        color_threshold: true
+      header:
+        show: true
+        title: SHT41 vs BME280 — teplota 24 h
+        show_states: true
+        colorize_states: true
+      series:
+      - entity: sensor.meteostanica_vonku_1_vonkajsia_teplota
+        name: SHT41 (riadiaci)
+        type: line
+        stroke_width: 3
+        float_precision: 1
+        color_threshold:
+        - value: -25
+          color: '#311b92'
+        - value: -15
+          color: '#3f51b5'
+        - value: -5
+          color: '#2196f3'
+        - value: 0
+          color: '#00bcd4'
+        - value: 8
+          color: '#26a69a'
+        - value: 15
+          color: '#66bb6a'
+        - value: 21
+          color: '#d4e157'
+        - value: 26
+          color: '#ffc107'
+        - value: 31
+          color: '#ff9800'
+        - value: 36
+          color: '#f4511e'
+        - value: 40
+          color: '#b71c1c'
+      - entity: sensor.meteostanica_vonku_1_teplota_bme280
+        name: BME280 (referencia)
+        type: line
+        stroke_width: 2
+        float_precision: 1
+        color: '#9e9e9e'
+        opacity: 0.6
+      apex_config:
+        chart:
+          height: 190
+        grid:
+          borderColor: '#40404030'
+        legend:
+          show: true
+        stroke:
+          curve: smooth
+      grid_options:
+        columns: full
   - type: grid
     cards:
     - type: heading
@@ -575,6 +1346,9 @@ views:
       - entity: sensor.meteostanica_vonku_1_napatie_veternej_ruze_debug
         name: Veterna ruza V
         icon: mdi:compass-outline
+      - entity: sensor.meteostanica_vonku_1_smer_vetra_uhol
+        name: Smer vetra (uhol)
+        icon: mdi:compass-rose
       - entity: sensor.vonku_meteostanica_vonku_1_zrazky_tento_cyklus
         name: Zrazky tento cyklus
         icon: mdi:weather-pouring
