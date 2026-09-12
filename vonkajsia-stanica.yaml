@@ -10,8 +10,16 @@ substitutions:
   sleep_eco_mode_ms: "1800000"
   sleep_perf_mode_ms: "300000"
   sleep_failsafe: "4min"
+  # POZOR: nameraný rozsah ADC dažďovej doštičky za 7 dní bol 0.95–1.41 V,
+  # takže do pásma 0.140–0.300 V nespadlo ANI JEDNO z 252 meraní a
+  # rain_sensor_percent bol matematicky vždy 0 %. Navyše napätie nekoreluje
+  # s vlhkosťou vzduchu (Pearson r = -0.06), čo vyzerá na nepripojenú alebo
+  # nefunkčnú doštičku — treba skontrolovať zapojenie. Do tej doby sa na ňu
+  # detekcia dažďa nespolieha (rozhoduje člnkový zrážkomer).
   rain_calib_dry: "0.300"
   rain_calib_wet: "0.140"
+  rain_mm_per_tip: "0.2794"       # mm na jedno preklopenie člnka
+  rain_wakes_before_report: "4"   # po koľkých preklopeniach spraviť plný report
   wind_pullup_res: "4700"
   wifi_ap_timeout: "1min"
   wind_storm_threshold: "15.0"
@@ -27,35 +35,72 @@ esphome:
   friendly_name: ${friendly_name}
   project:
     name: "custom.meteostanica"
-    version: "3.8.0"
+    version: "3.9.0"
   on_boot:
-    priority: 600
-    then:
-      - script.execute: failsafe_guard
-      - lambda: |-
-          id(boot_count) += 1;
-          ESP_LOGI("boot", "=== BOOT #%d ===", id(boot_count));
-      - output.turn_on: rain_sensor_power
-      - output.turn_on: i2c_sensor_power
-      - delay: 2000ms
-      - script.execute: init_i2c_sensors
-      - if:
-          condition:
-            lambda: 'return id(i2c_initialized);'
-          then:
-            - component.update: bme280_sensor
-            - delay: 150ms
-            - component.update: bme280_sensor
-            - delay: 150ms
-            - component.update: bme280_sensor
-            - delay: 100ms
-      - component.update: battery_voltage
-      - component.update: sht41_sensor
-      - component.update: ltr390_sensor
-      # Boot guard: počkáme 10s kým sa kábel ustáli, až potom povolíme počítanie zrážok
-      - delay: 10000ms
-      - lambda: 'id(rain_boot_ready) = true;'
-      - script.execute: wifi_connect_logic
+    # Najskôr zisti, či nás zobudil člnok zrážkomeru — kým sa nič iné nerozbehlo.
+    - priority: 900
+      then:
+        - lambda: |-
+            if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
+              id(woken_by_rain) = true;
+              id(rain_tips_sleep) += 1;
+              id(rain_wake_streak) += 1;
+              // Pripočítaj hneď — aby sa zrážka nestratila ani keď plný
+              // report príde až o niekoľko preklopení neskôr.
+              id(daily_rain_accumulator) += ${rain_mm_per_tip};
+              ESP_LOGI("rain", "Budenie člnkom: spolu %d preklopení, séria %d, kumulatívne %.2f mm",
+                       id(rain_tips_sleep), id(rain_wake_streak), id(daily_rain_accumulator));
+              if (id(rain_wake_streak) >= 20) {
+                ESP_LOGE("rain", "Podozrivo veľa budení po sebe — zaseknutý kontakt?");
+                id(sensor_error_count) += 1;
+              }
+            } else {
+              id(rain_wake_streak) = 0;
+            }
+    - priority: 600
+      then:
+        # Budenie člnkom: zrážku sme už započítali, netreba kvôli nej dvíhať
+        # WiFi. Vráť sa spať a report nechaj na časovač alebo na ďalšie
+        # preklopenia — inak by pri daždi stála WiFi takmer nepretržite.
+        - if:
+            condition:
+              lambda: |-
+                return id(woken_by_rain)
+                       && id(rain_wake_streak) < ${rain_wakes_before_report}
+                       && id(last_battery_level) > ${bat_storm_min};
+            then:
+              - logger.log:
+                  level: INFO
+                  tag: "rain"
+                  format: "Krátke budenie člnkom — späť do spánku bez WiFi."
+              - deep_sleep.enter:
+                  id: deep_sleep_control
+                  sleep_duration: ${sleep_storm_mode_ms}ms
+        - script.execute: failsafe_guard
+        - lambda: |-
+            id(boot_count) += 1;
+            ESP_LOGI("boot", "=== BOOT #%d ===", id(boot_count));
+        - output.turn_on: rain_sensor_power
+        - output.turn_on: i2c_sensor_power
+        - delay: 2000ms
+        - script.execute: init_i2c_sensors
+        - if:
+            condition:
+              lambda: 'return id(i2c_initialized);'
+            then:
+              - component.update: bme280_sensor
+              - delay: 150ms
+              - component.update: bme280_sensor
+              - delay: 150ms
+              - component.update: bme280_sensor
+              - delay: 100ms
+        - component.update: battery_voltage
+        - component.update: sht41_sensor
+        - component.update: ltr390_sensor
+        # Boot guard: počkáme 10s kým sa kábel ustáli, až potom povolíme počítanie zrážok
+        - delay: 10000ms
+        - lambda: 'id(rain_boot_ready) = true;'
+        - script.execute: wifi_connect_logic
   on_shutdown:
     then:
       - logger.log:
@@ -183,6 +228,22 @@ globals:
     type: float
     restore_value: false   # pulse_counter total sa po každom boote vynuluje
     initial_value: "0.0"
+  - id: rain_tips_sleep
+    type: int
+    restore_value: true    # počet preklopení zachytených budením z deep sleep
+    initial_value: "0"
+  - id: rain_wake_streak
+    type: int
+    restore_value: true    # koľko budení po sebe spôsobil člnok
+    initial_value: "0"
+  - id: woken_by_rain
+    type: bool
+    restore_value: false
+    initial_value: "false"
+  - id: last_battery_level
+    type: float
+    restore_value: true    # posledná známa batéria — pre rozhodovanie bez merania
+    initial_value: "100.0"
   - id: pressure_logged_this_boot
     type: bool
     restore_value: false   # zabráni viacnásobnému zápisu tlaku do histórie v jednom boote
@@ -369,12 +430,17 @@ sensor:
     pin:
       number: GPIO26
       mode: INPUT_PULLUP
+      allow_other_uses: true   # ten istý pin budí z deep sleep cez ext0
     name: "Intenzita zrážok"
     id: rain_fall_rate
     unit_of_measurement: "mm/h"
     device_class: precipitation_intensity
     state_class: measurement
     accuracy_decimals: 1
+    # update_interval 60 s bol presne na hrane uptime, pri ktorej stanica
+    # zaspáva (>= 60 s), takže publikovanie sa takmer nikdy nestihlo a
+    # "Intenzita zrážok" ostávala natrvalo unknown. read_all_sensors preto
+    # volá component.update explicitne, kým je stanica ešte hore.
     update_interval: 60s
     use_pcnt: false
     internal_filter: 500ms     # zvýšené z 200ms — 3m kábel pri boote generuje kapacitívne falošné pulzy
@@ -388,7 +454,7 @@ sensor:
       device_class: precipitation
       state_class: measurement    # NIE total_increasing — počítadlo sa nuluje po každom deep sleep
       filters:
-        - multiply: 0.2794
+        - multiply: ${rain_mm_per_tip}
       on_value:
         then:
           - lambda: |-
@@ -621,6 +687,14 @@ sensor:
     update_interval: never
     lambda: 'return id(daily_rain_accumulator);'
   - platform: template
+    name: "Preklopenia člnka (spolu)"
+    id: rain_tips_sensor
+    entity_category: diagnostic
+    accuracy_decimals: 0
+    icon: "mdi:counter"
+    update_interval: never
+    lambda: 'return (float)id(rain_tips_sleep);'
+  - platform: template
     name: "Zaseknutá vlhkosť (počet)"
     id: humidity_stuck_sensor
     entity_category: diagnostic
@@ -635,12 +709,16 @@ binary_sensor:
     id: rain_detection
     device_class: moisture
     lambda: |-
+      // Analógová doštička je momentálne nedôveryhodná (viď poznámku pri
+      // rain_calib_dry), preto je len doplnok — rozhoduje člnkový zrážkomer.
       bool analog = id(rain_sensor_percent).has_state() &&
                     !isnan(id(rain_sensor_percent).state) &&
                     id(rain_sensor_percent).state > ${rain_moisture_threshold};
       bool bucket = id(rain_fall_rate).has_state() &&
+                    !isnan(id(rain_fall_rate).state) &&
                     id(rain_fall_rate).state > 0.5f;
-      return analog || bucket;
+      bool woke = id(woken_by_rain);   // člnok sa preklopil počas spánku
+      return analog || bucket || woke;
     filters:
       - delayed_on: 5s    # analógová doštička šumí; delayed_off nemá zmysel — stav neprežije deep sleep
   - platform: template
@@ -901,6 +979,7 @@ switch:
       - lambda: |-
           id(daily_rain_accumulator) = 0.0f;
           id(last_rain_total) = 0.0f;
+          id(rain_tips_sleep) = 0;
           ESP_LOGI("rain", "Kumulatívny súčet zrážok vynulovaný.");
       - component.update: rain_cumulative
   - platform: template
@@ -944,6 +1023,18 @@ number:
       - lambda: 'id(humidity_threshold) = x;'
 deep_sleep:
   id: deep_sleep_control
+  # Preklopenie člnka budí ESP32 aj z deep sleep (GPIO26 je RTC-capable, ext0).
+  # Bez toho sa pulzy počítali len počas ~60 s bdenia z 10–30 min cyklu,
+  # teda ~3 % času — drvivá väčšina zrážok sa jednoducho stratila.
+  wakeup_pin:
+    number: GPIO26
+    mode: INPUT_PULLUP
+    inverted: true          # reed spína na GND
+    # GPIO26 používa aj pulse_counter. Nie je to konflikt: kým je stanica hore,
+    # pulzy počíta pulse_counter, počas deep sleep ten istý pin obsluhuje
+    # RTC doména cez ext0. Nikdy nebežia naraz.
+    allow_other_uses: true
+  wakeup_pin_mode: IGNORE   # zaseknutý kontakt nesmie zablokovať spánok
 script:
   - id: failsafe_guard
     mode: restart
@@ -1124,6 +1215,8 @@ script:
       # smer vetra vypočítame až po naplnení filtra
       - component.update: wind_direction_angle
       - component.update: rain_sensor_percent
+      # Bez tohto sa pulzy nazbierané počas bdenia zahodili pri uspaní.
+      - component.update: rain_fall_rate
       # Watchdog: SHT41 sa vie "zaseknúť" a vracať stále tú istú hodnotu
       - lambda: |-
           if (id(sht41_humidity).has_state() && !isnan(id(sht41_humidity).state)) {
@@ -1160,6 +1253,7 @@ script:
       - component.update: station_mode_text
       - component.update: rain_cumulative
       - component.update: humidity_stuck_sensor
+      - component.update: rain_tips_sensor
       # 4) až úplne na záver prepíš referenciu pre porovnanie v ĎALŠOM cykle
       - lambda: |-
           if (id(sht41_humidity).has_state() && !isnan(id(sht41_humidity).state))
@@ -1264,6 +1358,7 @@ script:
                 }
                 id(last_sleep_duration_s) = (float)sleep_ms / 1000.0f;
                 id(last_sleep_mode) = mode_id;
+                id(last_battery_level) = bat;   // použije sa pri budení člnkom, keď sa nemeria
                 const char* names[] = {"Normal","STORM","ECO","PERF"};
                 ESP_LOGI("sleep","Režim: %s | %us | Bat: %.0f%% | Wind: %.1fkm/h | Rain:%s Storm:%s",
                   names[mode_id], sleep_ms/1000, bat, wind,
